@@ -1878,69 +1878,13 @@ describe StripeMerchantAccountManager, :vcr do
         end
       end
 
-      let(:expected_account_params) do
-        {
-          type: "custom",
-          country: "IN",
-          metadata: {
-            user_id: user.external_id,
-            tos_agreement_id: tos_agreement.external_id,
-            user_compliance_info_id: user_compliance_info.external_id,
-            bank_account_id: bank_account.external_id
-          },
-          tos_acceptance: { date: 1427846400, ip: "54.234.242.13", service_agreement: "recipient" },
-          default_currency: "inr",
-          business_type: "individual",
-          business_profile: {
-            name: user_compliance_info.legal_entity_name,
-            url: user.business_profile_url,
-            product_description: user_compliance_info.legal_entity_name
-          },
-          individual: {
-            address: {
-              line1: "address_full_match",
-              line2: nil,
-              city: "Indore",
-              state: nil,
-              postal_code: "452010",
-              country: "IN"
-            },
-            dob: { day: 1, month: 1, year: 1901 },
-            first_name: "Chuck",
-            last_name: "Bartowski",
-            phone: "0000000000",
-            email: user.email,
-          },
-          bank_account: {
-            country: "IN",
-            currency: "inr",
-            account_number: "000123456789",
-            routing_number: "HDFC0004051"
-          },
-          settings: {
-            payouts: {
-              schedule: {
-                interval: "manual"
-              },
-              debit_negative_balances: false
-            }
-          },
-          requested_capabilities: StripeMerchantAccountManager::CROSS_BORDER_PAYOUTS_ONLY_CAPABILITIES
-        }
-      end
+      it "raises a user not ready error" do
+        expect(Stripe::Account).not_to receive(:create)
 
-      it "creates an account at stripe with all the params and returns the corresponding merchant account" do
-        expect(Stripe::Account).to receive(:create).with(expected_account_params).and_call_original
-
-        merchant_account = subject.create_account(user, passphrase: "1234")
-
-        expect(merchant_account.charge_processor_id).to eq(StripeChargeProcessor.charge_processor_id)
-        expect(merchant_account.charge_processor_merchant_id).to be_present
-        expect(merchant_account.country).to eq("IN")
-        expect(merchant_account.currency).to eq("inr")
-        expect(bank_account.reload.stripe_connect_account_id).to eq(merchant_account.charge_processor_merchant_id)
-        expect(bank_account.reload.stripe_bank_account_id).to match(/ba_[a-zA-Z0-9]+/)
-        expect(bank_account.reload.stripe_fingerprint).to match(/[a-zA-Z0-9]+/)
+        expect do
+          subject.create_account(user, passphrase: "1234")
+        end.to raise_error(MerchantRegistrationUserNotReadyError, /not supported yet/)
+        expect(user.merchant_accounts.alive.count).to eq(0)
       end
     end
 
