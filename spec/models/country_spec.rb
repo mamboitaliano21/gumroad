@@ -23,7 +23,7 @@ describe Country do
       expect(Country.new("NO").supports_stripe_cross_border_payouts?).to be false
       expect(Country.new("AR").supports_stripe_cross_border_payouts?).to be true
       expect(Country.new("PE").supports_stripe_cross_border_payouts?).to be true
-      expect(Country.new("IN").supports_stripe_cross_border_payouts?).to be true
+      expect(Country.new("IN").supports_stripe_cross_border_payouts?).to be false
       expect(Country.new("TW").supports_stripe_cross_border_payouts?).to be true
       expect(Country.new("VN").supports_stripe_cross_border_payouts?).to be true
       expect(Country.new("NA").supports_stripe_cross_border_payouts?).to be true
@@ -121,7 +121,7 @@ describe Country do
       expect(Country.new("GT").can_accept_stripe_charges?).to be false
       expect(Country.new("AG").can_accept_stripe_charges?).to be false
       expect(Country.new("TZ").can_accept_stripe_charges?).to be false
-      expect(Country.new("IN").can_accept_stripe_charges?).to be false
+      expect(Country.new("IN").can_accept_stripe_charges?).to be true
       expect(Country.new("TW").can_accept_stripe_charges?).to be false
       expect(Country.new("AL").can_accept_stripe_charges?).to be false
       expect(Country.new("BH").can_accept_stripe_charges?).to be false
@@ -226,7 +226,7 @@ describe Country do
       expect(Country.new("GT").stripe_capabilities).to eq StripeMerchantAccountManager::CROSS_BORDER_PAYOUTS_ONLY_CAPABILITIES
       expect(Country.new("NG").stripe_capabilities).to eq StripeMerchantAccountManager::CROSS_BORDER_PAYOUTS_ONLY_CAPABILITIES
       expect(Country.new("AZ").stripe_capabilities).to eq StripeMerchantAccountManager::CROSS_BORDER_PAYOUTS_ONLY_CAPABILITIES
-      expect(Country.new("IN").stripe_capabilities).to eq StripeMerchantAccountManager::CROSS_BORDER_PAYOUTS_ONLY_CAPABILITIES
+      expect(Country.new("IN").stripe_capabilities).to eq StripeMerchantAccountManager::REQUESTED_CAPABILITIES
       expect(Country.new("TW").stripe_capabilities).to eq StripeMerchantAccountManager::CROSS_BORDER_PAYOUTS_ONLY_CAPABILITIES
       expect(Country.new("BA").stripe_capabilities).to eq StripeMerchantAccountManager::CROSS_BORDER_PAYOUTS_ONLY_CAPABILITIES
       expect(Country.new("VN").stripe_capabilities).to eq StripeMerchantAccountManager::CROSS_BORDER_PAYOUTS_ONLY_CAPABILITIES
