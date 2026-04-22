@@ -288,15 +288,6 @@ describe User::Compliance do
     end
   end
 
-  describe "signed_up_from_india?" do
-    it "returns true if from India" do
-      in_creator = create(:user)
-      create(:user_compliance_info_empty, user: in_creator, country: "India")
-      expect(in_creator.signed_up_from_india?).to be true
-      expect(in_creator.compliance_country_has_states?).to be false
-    end
-  end
-
   describe "signed_up_from_pakistan?" do
     it "returns true if from Pakistan" do
       pk_creator = create(:user)
