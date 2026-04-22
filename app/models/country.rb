@@ -20,7 +20,6 @@ class Country
     Compliance::Countries::SMR,
     Compliance::Countries::NGA,
     Compliance::Countries::JOR,
-    Compliance::Countries::IND,
     Compliance::Countries::BIH,
     Compliance::Countries::VNM,
     Compliance::Countries::TWN,

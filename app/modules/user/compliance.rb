@@ -62,7 +62,6 @@ module User::Compliance
     Compliance::Countries::JOR,
     Compliance::Countries::NGA,
     Compliance::Countries::AZE,
-    Compliance::Countries::IND,
     Compliance::Countries::AGO,
     Compliance::Countries::NER,
     Compliance::Countries::SMR,
