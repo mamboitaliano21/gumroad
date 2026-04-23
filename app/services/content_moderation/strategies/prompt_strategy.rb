@@ -38,6 +38,8 @@ class ContentModeration::Strategies::PromptStrategy
     @image_urls = image_urls
   end
 
+  MAX_RETRIES = 3
+
   def perform
     return Result.new(status: "compliant", reasoning: []) if @text.blank? && @image_urls.empty?
 
@@ -52,7 +54,7 @@ class ContentModeration::Strategies::PromptStrategy
       { name: "adult_content", rules: ADULT_CONTENT_RULES, skip_images: false },
       { name: "spam", rules: SPAM_RULES, skip_images: true },
     ].each do |preset|
-      result = evaluate_preset(preset)
+      result = with_retry { evaluate_preset(preset) }
       next if result[:status] == "compliant"
 
       if passes_uncertainty_check?(result[:reasoning])
@@ -123,13 +125,30 @@ class ContentModeration::Strategies::PromptStrategy
       raise
     end
 
+    def with_retry(retries: MAX_RETRIES)
+      attempts = 0
+      begin
+        attempts += 1
+        yield
+      rescue StandardError => e
+        if attempts < retries && e.message.include?("Failed to download image")
+          Rails.logger.warn("ContentModeration::PromptStrategy retrying (attempt #{attempts}): #{e.message}")
+          sleep(0.5 * attempts)
+          retry
+        end
+        raise
+      end
+    end
+
     def build_messages(rules, skip_images: false)
       user_content = []
       user_content << { type: "text", text: "Content to evaluate:\n\n#{@text.presence || '[no text provided]'}" }
 
       if !skip_images && @image_urls.present?
         @image_urls.sample(3).each do |url|
-          user_content << { type: "image_url", image_url: { url: url } }
+          data_uri = ContentModeration::ImageEncoder.to_base64_data_uri(url)
+          next unless data_uri
+          user_content << { type: "image_url", image_url: { url: data_uri } }
         end
       end
 

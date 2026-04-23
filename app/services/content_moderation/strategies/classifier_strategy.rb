@@ -25,6 +25,8 @@ class ContentModeration::Strategies::ClassifierStrategy
     @image_urls = image_urls
   end
 
+  MAX_RETRIES = 3
+
   def perform
     return Result.new(status: "compliant", reasoning: []) if @text.blank? && @image_urls.empty?
 
@@ -34,7 +36,7 @@ class ContentModeration::Strategies::ClassifierStrategy
     client = OpenAI::Client.new(access_token: api_key, request_timeout: OPENAI_REQUEST_TIMEOUT_IN_SECONDS)
 
     input = build_input
-    response = client.moderations(parameters: { model: "omni-moderation-latest", input: input })
+    response = with_retry { client.moderations(parameters: { model: "omni-moderation-latest", input: input }) }
 
     result = response.dig("results", 0)
     return Result.new(status: "compliant", reasoning: []) if result.nil?
@@ -66,11 +68,28 @@ class ContentModeration::Strategies::ClassifierStrategy
   end
 
   private
+    def with_retry(retries: MAX_RETRIES)
+      attempts = 0
+      begin
+        attempts += 1
+        yield
+      rescue StandardError => e
+        if attempts < retries && e.message.include?("Failed to download image")
+          Rails.logger.warn("ContentModeration::ClassifierStrategy retrying (attempt #{attempts}): #{e.message}")
+          sleep(0.5 * attempts)
+          retry
+        end
+        raise
+      end
+    end
+
     def build_input
       parts = []
       parts << { type: "text", text: @text } if @text.present?
       @image_urls.sample(5).each do |url|
-        parts << { type: "image_url", image_url: { url: url } }
+        data_uri = ContentModeration::ImageEncoder.to_base64_data_uri(url)
+        next unless data_uri
+        parts << { type: "image_url", image_url: { url: data_uri } }
       end
       parts
     end
