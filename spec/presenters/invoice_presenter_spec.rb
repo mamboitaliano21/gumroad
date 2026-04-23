@@ -121,6 +121,7 @@ describe InvoicePresenter do
           heading: be_a(String),
           display_vat_id: be_in([true, false]),
           vat_id_label: be_a(String),
+          business_id_country_codes: be_an(Array),
           supplier_info: be_a(Hash),
           seller_info: be_a(Hash),
           order_info: be_a(Hash),
@@ -128,6 +129,7 @@ describe InvoicePresenter do
         )
 
         expect(props[:countries]).to eq(Compliance::Countries.for_select.to_h)
+        expect(props[:business_id_country_codes]).to include("DE", "FR", "GB")
       end
     end
   end
@@ -239,6 +241,7 @@ describe InvoicePresenter do
           heading: be_a(String),
           display_vat_id: be_in([true, false]),
           vat_id_label: be_a(String),
+          business_id_country_codes: be_an(Array),
           supplier_info: be_a(Hash),
           seller_info: be_a(Hash),
           order_info: be_a(Hash),
@@ -246,6 +249,7 @@ describe InvoicePresenter do
         )
 
         expect(props[:countries]).to eq(Compliance::Countries.for_select.to_h)
+        expect(props[:business_id_country_codes]).to include("DE", "FR", "GB")
       end
     end
   end
