@@ -1,0 +1,136 @@
+<%= render "home/shared/header",
+  bg_color: "purple",
+  text_color: "white",
+  subtitle: "Gumroad for SaaS",
+  title: "Sell software,<br>not complexity",
+  description: "License keys. Recurring billing. Usage analytics. Everything you need to sell SaaS, with none of the infrastructure headaches." %>
+
+<%= render "home/shared/section_header",
+  subtitle: "Software tools",
+  title: "Built for software sellers",
+  description: "Everything you need to sell, license, and manage<br class=\"hidden override md:inline\"> software subscriptions. Out of the box."
+%>
+
+<div class="flex flex-col overflow-hidden border-t border-black lg:flex-row">
+  <div class="flex items-center justify-center border-b border-black bg-purple p-8 py-16 sm:p-12 md:p-16 lg:w-1/2 lg:border-b-0 lg:border-r xl:p-32">
+    <div class="max-w-md text-center">
+      <div class="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-full border border-white/20 bg-white/10 text-5xl">🔑</div>
+      <h3 class="text-3xl font-medium text-white lg:text-4xl">License keys</h3>
+      <p class="mt-4 text-lg text-white/80 lg:text-xl">Auto-generated. API-verified. Per-seat limits. No third-party service needed.</p>
+    </div>
+  </div>
+  <div class="flex items-center justify-center bg-black p-8 py-16 text-white sm:p-12 md:p-16 lg:w-1/2 xl:p-32">
+    <div class="max-w-2xl space-y-12 md:space-y-16">
+      <div class="space-y-4">
+        <h3 class="text-3xl font-medium text-purple lg:text-4xl xl:text-5xl">
+          License keys, built in
+        </h3>
+        <p class="text-lg lg:text-xl xl:text-2xl">
+          Every sale automatically generates a unique license key. Validate keys with our API, set activation limits, and manage seats. No third-party licensing service needed.
+        </p>
+      </div>
+      <div class="space-y-4">
+        <h3 class="text-3xl font-medium text-purple lg:text-4xl xl:text-5xl">
+          Recurring billing that just works
+        </h3>
+        <p class="text-lg lg:text-xl xl:text-2xl">
+          Monthly, quarterly, annual. Offer free trials, tiered pricing, and let customers upgrade or downgrade on their own. We handle failed payments, retries, and dunning.
+        </p>
+      </div>
+      <div class="space-y-4">
+        <h3 class="text-3xl font-medium text-purple lg:text-4xl xl:text-5xl">
+          Version management
+        </h3>
+        <p class="text-lg lg:text-xl xl:text-2xl">
+          Ship multiple tiers of your software. Offer a free version alongside pro and enterprise plans, all from one product page.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%= render "home/shared/section_header",
+  subtitle: "Pricing that scales",
+  title: "Your pricing gets better as you grow",
+  description: "Start at 10%. Drop to 5% after $100K.<br class=\"hidden override md:inline\"> The more you grow, the more you keep."
+%>
+
+<div class="flex flex-col overflow-hidden border-t border-black lg:flex-row">
+  <div class="flex items-center justify-center bg-black p-8 py-16 text-white sm:p-12 md:p-16 lg:w-1/2 xl:p-32">
+    <div class="max-w-2xl space-y-12 md:space-y-16">
+      <div class="space-y-4">
+        <h3 class="text-3xl font-medium text-orange lg:text-4xl xl:text-5xl">
+          10% flat rate to start
+        </h3>
+        <p class="text-lg lg:text-xl xl:text-2xl">
+          No monthly fees. No setup costs. Just a simple percentage of each sale, so we only make money when you do.
+        </p>
+      </div>
+      <div class="space-y-4">
+        <h3 class="text-3xl font-medium text-orange lg:text-4xl xl:text-5xl">
+          5% after $100K
+        </h3>
+        <p class="text-lg lg:text-xl xl:text-2xl">
+          Once you cross $100,000 in lifetime sales, your rate drops to just 5%. The more you grow, the more you keep.
+        </p>
+      </div>
+      <div class="space-y-4">
+        <h3 class="text-3xl font-medium text-orange lg:text-4xl xl:text-5xl">
+          We handle everything
+        </h3>
+        <p class="text-lg lg:text-xl xl:text-2xl">
+          Merchant of record. Sales tax worldwide. Fraud protection. Chargebacks. You focus on building great software.
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="flex items-center justify-center border-b border-black bg-orange p-8 py-16 sm:p-12 md:p-16 lg:order-2 lg:w-1/2 lg:border-b-0 lg:border-l xl:p-32">
+    <div class="max-w-sm text-center">
+      <div class="text-8xl font-bold lg:text-9xl">5%</div>
+      <p class="mt-4 text-xl lg:text-2xl">after $100K in lifetime sales</p>
+      <div class="mt-8 inline-block rounded-full border border-black bg-white px-6 py-2 text-lg font-medium">SaaS only</div>
+    </div>
+  </div>
+</div>
+
+<%= render "home/shared/section_header",
+  subtitle: "Platform",
+  title: "Everything your SaaS needs",
+  description: "APIs, webhooks, analytics, and more. All built in,<br class=\"hidden override md:inline\"> so you can focus on your product."
+%>
+
+<div class="grid grid-cols-1 border-t border-black md:grid-cols-2 lg:grid-cols-3">
+  <div class="border-b border-black p-8 py-12 sm:p-12 md:border-r lg:py-16">
+    <h3 class="text-2xl font-medium lg:text-3xl">License key API</h3>
+    <p class="mt-4 text-lg lg:text-xl">Verify, activate, deactivate, and manage license keys programmatically.</p>
+  </div>
+  <div class="border-b border-black p-8 py-12 sm:p-12 lg:border-r lg:py-16">
+    <h3 class="text-2xl font-medium lg:text-3xl">Webhooks</h3>
+    <p class="mt-4 text-lg lg:text-xl">Get notified in real-time when customers subscribe, cancel, or update their plans.</p>
+  </div>
+  <div class="border-b border-black p-8 py-12 sm:p-12 md:border-r lg:border-r-0 lg:py-16">
+    <h3 class="text-2xl font-medium lg:text-3xl">Subscription analytics</h3>
+    <p class="mt-4 text-lg lg:text-xl">MRR, churn rate, LTV. All the metrics you need, built into your dashboard.</p>
+  </div>
+  <div class="border-b border-black p-8 py-12 sm:p-12 lg:border-r lg:py-16">
+    <h3 class="text-2xl font-medium lg:text-3xl">Custom domains</h3>
+    <p class="mt-4 text-lg lg:text-xl">Sell from your own domain. your-app.com/pricing, not gumroad.com.</p>
+  </div>
+  <div class="border-b border-black p-8 py-12 sm:p-12 md:border-r lg:py-16">
+    <h3 class="text-2xl font-medium lg:text-3xl">Affiliates</h3>
+    <p class="mt-4 text-lg lg:text-xl">Let your users sell for you. Built-in affiliate tracking and payouts.</p>
+  </div>
+  <div class="border-b border-black p-8 py-12 sm:p-12 lg:py-16">
+    <h3 class="text-2xl font-medium lg:text-3xl">Global payments</h3>
+    <p class="mt-4 text-lg lg:text-xl">Accept payments in any currency. We handle conversion and local payment methods.</p>
+  </div>
+</div>
+
+<div class="flex flex-col items-center justify-center text-center border-t border-black bg-pink gap-8 px-8 py-16 lg:px-[4vw] lg:py-24 lg:gap-16">
+  <h2 class="text-4xl font-medium sm:text-5xl lg:text-7xl">
+    Start selling software today.
+  </h2>
+  <%= render "home/shared/button", text: "Start selling", url: new_user_registration_path %>
+</div>
+
+<%= render "home/shared/footer" %>
