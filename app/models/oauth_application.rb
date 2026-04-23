@@ -61,9 +61,10 @@ class OauthApplication < Doorkeeper::Application
   # Returns an existing active access token or creates one if none exist
   def get_or_generate_access_token
     ensure_access_grant_exists
-    access_tokens.where(resource_owner_id: owner.id,
-                        revoked_at: nil,
-                        scopes: Doorkeeper.configuration.public_scopes.join(" ")).first_or_create!
+    attrs = { resource_owner_id: owner.id,
+              revoked_at: nil,
+              scopes: Doorkeeper.configuration.public_scopes.join(" ") }
+    find_or_create_concurrency_safe(access_tokens, attrs)
   end
 
   def revoke_access_for(user)
@@ -78,10 +79,33 @@ class OauthApplication < Doorkeeper::Application
   end
 
   private
+    CONCURRENCY_RETRY_LIMIT = 3
+    CONCURRENCY_RETRY_BACKOFF = 0.1
+
     def ensure_access_grant_exists
-      access_grants.where(resource_owner_id: owner.id,
-                          scopes: Doorkeeper.configuration.public_scopes.join(" "),
-                          redirect_uri:).first_or_create! { |access_grant| access_grant.expires_in = 60.years }
+      attrs = { resource_owner_id: owner.id,
+                scopes: Doorkeeper.configuration.public_scopes.join(" "),
+                redirect_uri: }
+      find_or_create_concurrency_safe(access_grants, attrs) do |access_grant|
+        access_grant.expires_in = 60.years
+      end
+    end
+
+    def find_or_create_concurrency_safe(relation, attrs, &block)
+      attempts = 0
+      begin
+        record = relation.find_by(attrs)
+        return record if record
+
+        relation.create!(attrs, &block)
+      rescue ActiveRecord::RecordNotUnique
+        relation.find_by!(attrs)
+      rescue ActiveRecord::LockWaitTimeout
+        attempts += 1
+        raise if attempts >= CONCURRENCY_RETRY_LIMIT
+        sleep(CONCURRENCY_RETRY_BACKOFF * attempts)
+        retry
+      end
     end
 
     def set_default_scopes

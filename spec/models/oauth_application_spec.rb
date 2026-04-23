@@ -156,6 +156,85 @@ describe OauthApplication do
         end.to_not change(Doorkeeper::AccessGrant, :count)
       end
     end
+
+    describe "concurrency safety" do
+      let(:relation) { @oauth_application.access_tokens }
+      let(:attrs) do
+        { resource_owner_id: @oauth_application.owner.id,
+          revoked_at: nil,
+          scopes: Doorkeeper.configuration.public_scopes.join(" ") }
+      end
+
+      it "returns the existing record when RecordNotUnique is raised during create!" do
+        existing_token = Doorkeeper::AccessToken.create!(
+          application: @oauth_application,
+          resource_owner_id: @oauth_application.owner.id,
+          scopes: Doorkeeper.configuration.public_scopes.join(" ")
+        )
+
+        find_call = 0
+        allow(relation).to receive(:find_by).and_wrap_original do |original, *args|
+          find_call += 1
+          find_call == 1 ? nil : original.call(*args)
+        end
+        allow(relation).to receive(:create!).and_raise(ActiveRecord::RecordNotUnique.new("duplicate"))
+
+        result = @oauth_application.send(:find_or_create_concurrency_safe, relation, attrs)
+        expect(result).to eq(existing_token)
+      end
+
+      it "retries and succeeds when LockWaitTimeout is raised once" do
+        attempts = 0
+        allow(relation).to receive(:find_by).and_return(nil)
+        allow(relation).to receive(:create!).and_wrap_original do |original, *args|
+          attempts += 1
+          raise ActiveRecord::LockWaitTimeout.new("Lock wait timeout exceeded") if attempts == 1
+          original.call(*args)
+        end
+        allow(@oauth_application).to receive(:sleep)
+
+        result = @oauth_application.send(:find_or_create_concurrency_safe, relation, attrs)
+        expect(result).to be_a(Doorkeeper::AccessToken)
+        expect(attempts).to eq(2)
+      end
+
+      it "re-raises LockWaitTimeout after exhausting retries" do
+        allow(relation).to receive(:find_by).and_return(nil)
+        allow(relation).to receive(:create!).and_raise(ActiveRecord::LockWaitTimeout.new("Lock wait timeout exceeded"))
+        allow(@oauth_application).to receive(:sleep)
+
+        expect do
+          @oauth_application.send(:find_or_create_concurrency_safe, relation, attrs)
+        end.to raise_error(ActiveRecord::LockWaitTimeout)
+      end
+
+      it "does not raise RecordNotUnique from get_or_generate_access_token under a concurrent create" do
+        @oauth_application.send(:ensure_access_grant_exists)
+
+        existing_token = nil
+        raised = false
+        access_tokens_relation = @oauth_application.access_tokens
+        allow(@oauth_application).to receive(:access_tokens).and_return(access_tokens_relation)
+        allow(access_tokens_relation).to receive(:create!).and_wrap_original do |original, *args|
+          if raised
+            original.call(*args)
+          else
+            raised = true
+            existing_token = Doorkeeper::AccessToken.create!(
+              application: @oauth_application,
+              resource_owner_id: @oauth_application.owner.id,
+              scopes: Doorkeeper.configuration.public_scopes.join(" ")
+            )
+            raise ActiveRecord::RecordNotUnique.new("duplicate")
+          end
+        end
+
+        expect do
+          result = @oauth_application.get_or_generate_access_token
+          expect(result).to eq(existing_token)
+        end.not_to raise_error
+      end
+    end
   end
 
   describe "#mark_deleted!" do
