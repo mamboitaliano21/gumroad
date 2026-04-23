@@ -65,6 +65,24 @@ class Api::V2::BaseController < ApplicationController
       return unless doorkeeper_token.present?
 
       Rails.logger.info("api v2 user:#{current_resource_owner.id} token:#{doorkeeper_token.id} in #{params[:controller]}##{params[:action]}")
+
+      track_api_event
+    end
+
+    def track_api_event
+      source = ApiEvent.detect_source(request.user_agent)
+      cli_version = request.user_agent&.match(/gumroad-cli\/(\S+)/i)&.captures&.first
+
+      ApiEvent.create(
+        user: current_resource_owner,
+        oauth_application: doorkeeper_token.application,
+        event_type: "api_call",
+        source:,
+        source_version: cli_version,
+        controller_action: "#{params[:controller]}##{params[:action]}"
+      )
+    rescue => e
+      Rails.logger.error("Failed to track API event: #{e.message}")
     end
 
     def next_page_url(page_key)
