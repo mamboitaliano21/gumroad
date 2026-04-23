@@ -65,6 +65,9 @@ class ContentModeration::Strategies::PromptStrategy
     else
       Result.new(status: "compliant", reasoning: [])
     end
+  rescue Faraday::ClientError => e
+    Rails.logger.error("ContentModeration::PromptStrategy client error (failing open): #{e.message}")
+    Result.new(status: "compliant", reasoning: [])
   rescue StandardError => e
     Rails.logger.error("ContentModeration::PromptStrategy error: #{e.message}")
     raise
@@ -90,6 +93,9 @@ class ContentModeration::Strategies::PromptStrategy
         status: parsed["flagged"] ? "flagged" : "compliant",
         reasoning: parsed["reasoning"].to_s,
       }
+    rescue Faraday::ClientError => e
+      Rails.logger.error("ContentModeration::PromptStrategy preset evaluation client error (failing open): #{e.message}")
+      { status: "compliant", reasoning: "" }
     rescue StandardError => e
       Rails.logger.error("ContentModeration::PromptStrategy preset evaluation error: #{e.message}")
       raise
@@ -118,6 +124,9 @@ class ContentModeration::Strategies::PromptStrategy
       parsed = JSON.parse(content)
 
       !parsed["uncertain"]
+    rescue Faraday::ClientError => e
+      Rails.logger.error("ContentModeration::PromptStrategy uncertainty check client error (failing open): #{e.message}")
+      false
     rescue StandardError => e
       Rails.logger.error("ContentModeration::PromptStrategy uncertainty check error: #{e.message}")
       raise

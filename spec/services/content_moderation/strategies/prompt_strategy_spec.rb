@@ -75,6 +75,36 @@ RSpec.describe ContentModeration::Strategies::PromptStrategy, :vcr do
     expect(Rails.logger).to have_received(:error).with("ContentModeration::PromptStrategy preset evaluation error: API failure").at_least(:once)
   end
 
+  it "fails open when the OpenAI request returns a 400 Bad Request" do
+    allow(client).to receive(:chat).and_raise(Faraday::BadRequestError.new("the server responded with status 400"))
+
+    result = described_class.new(text: "moderate me", image_urls: ["https://cdn.example.com/1.png"]).perform
+
+    expect(result.status).to eq("compliant")
+    expect(result.reasoning).to eq([])
+    expect(Rails.logger).to have_received(:error).with(/ContentModeration::PromptStrategy preset evaluation client error \(failing open\):/).at_least(:once)
+  end
+
+  it "fails open when the uncertainty check returns a 400 Bad Request" do
+    call_count = 0
+    allow(client).to receive(:chat) do |_kwargs|
+      call_count += 1
+
+      case call_count
+      when 1
+        json_chat_response(flagged: true, reasoning: "clear adult content")
+      else
+        raise Faraday::BadRequestError.new("the server responded with status 400")
+      end
+    end
+
+    result = described_class.new(text: "moderate me").perform
+
+    expect(result.status).to eq("compliant")
+    expect(result.reasoning).to eq([])
+    expect(Rails.logger).to have_received(:error).with(/ContentModeration::PromptStrategy uncertainty check client error \(failing open\):/).at_least(:once)
+  end
+
   def json_chat_response(payload)
     { "choices" => [{ "message" => { "content" => payload.to_json } }] }
   end
