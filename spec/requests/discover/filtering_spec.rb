@@ -84,19 +84,15 @@ describe("Discover - Filtering scenarios", js: true, type: :system) do
     toggle_disclosure "Contains"
 
     check "pdf (1)"
-    wait_for_ajax
     expect_product_cards_with_names("product with a PDF")
 
     check "mp3 (1)"
-    wait_for_ajax
     expect_product_cards_with_names("product with a MP3", "product with a PDF")
 
     uncheck "pdf (1)"
-    wait_for_ajax
     expect_product_cards_with_names("product with a MP3")
 
     uncheck "mp3 (1)"
-    wait_for_ajax
     expect_product_cards_in_order([@product, @similar_product_3, @similar_product_2, @similar_product_4, @similar_product_1, product, product2, @similar_product_5])
 
     visit discover_url(host: discover_host, query: "product", filetypes: "mp3,pdf")
@@ -145,39 +141,30 @@ describe("Discover - Filtering scenarios", js: true, type: :system) do
   it "sorts products" do
     visit discover_url(host: discover_host)
     fill_in("Search products", with: "product\n")
-    wait_for_ajax
-
     select_disclosure "Sort by" do
       expect(page).to have_checked_field "Default"
     end
     expect_product_cards_in_order([@product, @similar_product_3, @similar_product_2, @similar_product_4, @similar_product_1, @similar_product_5])
 
     choose "Newest"
-    wait_for_ajax
     expect_product_cards_in_order([@similar_product_4, @similar_product_3, @similar_product_2, @similar_product_1, @product, @similar_product_5])
 
     choose "Highest rated"
-    wait_for_ajax
     expect_product_cards_in_order([@product, @similar_product_1, @similar_product_2, @similar_product_3, @similar_product_4, @similar_product_5])
 
     choose "Most reviewed"
-    wait_for_ajax
     expect_product_cards_in_order([@product, @similar_product_3, @similar_product_2, @similar_product_1, @similar_product_4, @similar_product_5])
 
     choose "Price (Low to High)"
-    wait_for_ajax
     expect_product_cards_in_order([@product, @similar_product_5, @similar_product_1, @similar_product_2, @similar_product_3, @similar_product_4])
 
     choose "Price (High to Low)"
-    wait_for_ajax
     expect_product_cards_in_order([@similar_product_4, @similar_product_3, @similar_product_2, @similar_product_1, @product, @similar_product_5])
 
     choose "Default"
-    wait_for_ajax
     expect_product_cards_in_order([@product, @similar_product_3, @similar_product_2, @similar_product_4, @similar_product_1, @similar_product_5])
 
     choose "Hot and new"
-    wait_for_ajax
     expect_product_cards_in_order([@similar_product_3, @product, @similar_product_4, @similar_product_2, @similar_product_1])
   end
 
@@ -187,28 +174,22 @@ describe("Discover - Filtering scenarios", js: true, type: :system) do
 
     toggle_disclosure "Price"
     fill_in "Minimum price", with: "3"
-    wait_for_ajax
-
     expect_product_cards_in_order([@similar_product_3, @similar_product_2, @similar_product_4, @similar_product_5])
 
     fill_in "Maximum price", with: "4"
-    wait_for_ajax
     expect_product_cards_in_order([@similar_product_3, @similar_product_2])
 
     visit discover_url(host: discover_host, query: "product")
     toggle_disclosure "Price"
     fill_in "Maximum price", with: "4"
-    wait_for_ajax
     expect_product_cards_in_order([@product, @similar_product_3, @similar_product_2, @similar_product_1, @similar_product_5])
 
     fill_in "Maximum price", with: "0"
-    wait_for_ajax
     expect(page).to have_content("No products found")
     expect(page).to have_product_card(count: 0)
 
     fill_in "Maximum price", with: "4"
     fill_in "Minimum price", with: "8"
-    wait_for_ajax
     expect_alert_message("Please set the price minimum to be lower than the maximum.")
   end
 
@@ -222,23 +203,18 @@ describe("Discover - Filtering scenarios", js: true, type: :system) do
 
     # filter by 4 star + ratings
     choose "4 stars and up"
-    wait_for_ajax
     expect_product_cards_in_order([@product, @similar_product_1])
 
     # filter by 3 star + ratings
     choose "3 stars and up"
-    wait_for_ajax
     expect_product_cards_in_order([@product, @similar_product_2, @similar_product_1])
 
     # filter by 2 star + ratings
     choose "2 stars and up"
-    wait_for_ajax
     expect_product_cards_in_order([@product, @similar_product_3, @similar_product_2, @similar_product_1])
 
     # filter by 1 star + ratings
     choose "1 star and up"
-    wait_for_ajax
-
     expect_product_cards_in_order([@product, @similar_product_3, @similar_product_2, @similar_product_4, @similar_product_1, @similar_product_5])
   end
 
@@ -248,12 +224,10 @@ describe("Discover - Filtering scenarios", js: true, type: :system) do
     select_disclosure "Price" do
       fill_in "Maximum price", with: "3"
     end
-    wait_for_ajax
     expect_product_cards_in_order([@product, @similar_product_2, @similar_product_1, @similar_product_5])
 
     find("[role=menuitem]", text: "Audio").hover
     click_on "All Audio"
-    wait_for_ajax
     expect(page).to have_selector("[aria-label='Breadcrumbs']", text: "Audio")
     within_section "Featured products", section_element: :section do
       expect_product_cards_in_order([@product, @similar_product_3, @similar_product_2, @similar_product_4, @similar_product_1])
@@ -262,7 +236,6 @@ describe("Discover - Filtering scenarios", js: true, type: :system) do
     select_disclosure "Price" do
       fill_in "Maximum price", with: "2"
     end
-    wait_for_ajax
     within_section "On the market" do
       expect_product_cards_in_order([@product, @similar_product_1])
     end
@@ -290,7 +263,6 @@ describe("Discover - Filtering scenarios", js: true, type: :system) do
 
   it "filters from url params and updates UI" do
     visit discover_url(host: discover_host, query: "product", rating: "3", min_price: "2", max_price: "4", sort: "highest_rated")
-    wait_for_ajax
     expect_product_cards_in_order([@similar_product_1, @similar_product_2])
     select_disclosure "Sort by" do
       expect(page).to have_checked_field("Highest rated")
@@ -358,20 +330,16 @@ describe("Discover - Filtering scenarios", js: true, type: :system) do
 
       toggle_disclosure "Price"
       fill_in("Maximum price", with: 2)
-      wait_for_ajax
       expect_product_cards_with_names("C# 0", "C# 1", "C# 2")
 
       fill_in("Minimum price", with: 1)
-      wait_for_ajax
       expect_product_cards_with_names("C# 1", "C# 2")
 
       click_on("Clear")
-      wait_for_ajax
       expect(page).to have_product_card(count: 4)
 
       toggle_disclosure "Rating"
       choose("3 stars and up")
-      wait_for_ajax
       expect_product_cards_with_names("C# 2", "C# 3")
     end
 
@@ -379,11 +347,9 @@ describe("Discover - Filtering scenarios", js: true, type: :system) do
       expect(page).to have_product_card(count: 4)
 
       fill_in("Search products", with: "C# 0\n")
-      wait_for_ajax
       expect_product_cards_with_names("C# 0")
 
       fill_in("Search products", with: "product 0\n")
-      wait_for_ajax
       expect(page).to_not have_product_card
     end
   end

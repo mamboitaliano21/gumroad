@@ -64,7 +64,6 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
           # Allows sending the email preview for the email that was created with "Send email" channel
           click_on "View email"
         end
-        wait_for_ajax
         expect(page).to have_alert(text: "A preview has been sent to your email.")
 
         # Allows closing the sidebar drawer
@@ -108,7 +107,6 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
         stub_const("PaginatedInstallmentsPresenter::PER_PAGE", 2)
 
         visit "#{emails_path}/published"
-        wait_for_ajax
 
         expect(page).to have_table_row({ "Subject" => "Email 1 (sent)" })
         expect(page).to have_table_row({ "Subject" => "Email 3 (sent)" })
@@ -123,7 +121,6 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
         expect(page).to_not have_table_row({ "Subject" => "Hello world!" })
 
         click_on "Load more"
-        wait_for_ajax
 
         expect(page).to have_table_row({ "Subject" => "Email 1 (sent)" })
         expect(page).to have_table_row({ "Subject" => "Email 3 (sent)" })
@@ -144,7 +141,6 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
           expect(page).to have_text("Are you sure you want to delete the email \"Email 1 (sent)\"? Customers who had access will no longer be able to see it. This action cannot be undone.")
           click_on "Delete email"
         end
-        wait_for_ajax
         expect(page).to have_alert(text: "Email deleted!")
 
         expect(page).to_not have_table_row({ "Subject" => "Email 1 (sent)" })
@@ -159,7 +155,6 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
         installment7.installment_rule.update!(to_be_published_at: 1.day.from_now)
 
         visit "#{emails_path}/scheduled"
-        wait_for_ajax
 
         within_table "Scheduled for #{installment5.installment_rule.to_be_published_at.in_time_zone(seller.timezone).strftime("%b %-d, %Y")}" do
           expect(page).to have_table_row({ "Subject" => "Email 5 (scheduled)", "Sent to" => "Customers of Product name", "Audience" => "1" })
@@ -176,7 +171,6 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
 
       it "deletes an email" do
         visit "#{emails_path}/scheduled"
-        wait_for_ajax
 
         find(:table_row, { "Subject" => "Email 5 (scheduled)" }).click
         within_modal "Email 5 (scheduled)" do
@@ -187,7 +181,6 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
           expect(page).to have_text("Are you sure you want to delete the email \"Email 5 (scheduled)\"? This action cannot be undone.")
           click_on "Delete email"
         end
-        wait_for_ajax
         expect(page).to have_alert(text: "Email deleted!")
 
         expect(page).to_not have_table_row({ "Subject" => "Email 5 (scheduled)" })
@@ -199,7 +192,6 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
     describe "draft emails" do
       it "shows draft emails" do
         visit "#{emails_path}/drafts"
-        wait_for_ajax
 
         expect(page).to have_table_row({ "Subject" => "Email 2 (draft)", "Sent to" => "Customers of Product name", "Audience" => "1" })
         expect(page).to have_table_row({ "Subject" => "Email 4 (draft)", "Sent to" => "Customers of Product name", "Audience" => "1" })
@@ -213,7 +205,6 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
         stub_const("PaginatedInstallmentsPresenter::PER_PAGE", 2)
 
         visit "#{emails_path}/drafts"
-        wait_for_ajax
 
         expect(page).to have_table_row({ "Subject" => "Email 2 (draft)" })
         expect(page).to have_table_row({ "Subject" => "Email 4 (draft)" })
@@ -228,7 +219,6 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
         expect(page).to_not have_table_row({ "Subject" => "Email 4 (draft)" })
 
         click_on "Load more"
-        wait_for_ajax
 
         expect(page).to have_table_row({ "Subject" => "Hello world!" })
         expect(page).to have_table_row({ "Subject" => "Email 2 (draft)" })
@@ -239,7 +229,6 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
 
       it "deletes an email" do
         visit "#{emails_path}/drafts"
-        wait_for_ajax
 
         find(:table_row, { "Subject" => "Email 2 (draft)" }).click
         within_modal "Email 2 (draft)" do
@@ -250,7 +239,6 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
           expect(page).to have_text("Are you sure you want to delete the email \"Email 2 (draft)\"? This action cannot be undone.")
           click_on "Delete email"
         end
-        wait_for_ajax
         expect(page).to have_alert(text: "Email deleted!")
 
         expect(page).to_not have_table_row({ "Subject" => "Email 2 (draft)" })
@@ -268,12 +256,10 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
         create(:installment, name: "Email 7 (sent)", published_at: 10.days.ago) # another seller's email, so won't match
 
         visit "#{emails_path}/published"
-        wait_for_ajax
 
         select_disclosure "Toggle Search" do
           fill_in "Search emails", with: "email"
         end
-        wait_for_ajax
 
         expect(page).to have_table_row({ "Subject" => "Thank you!" })
 
@@ -287,7 +273,6 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
         expect(page).to_not have_table_row({ "Subject" => "Hello world" })
 
         click_on "Load more"
-        wait_for_ajax
 
         expect(page).to have_table_row({ "Subject" => "Thank you!" })
         expect(page).to have_table_row({ "Subject" => "Email 3 (sent)" })
@@ -301,7 +286,6 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
         expect(page).to_not have_table_row({ "Subject" => "Hello world" })
 
         click_on "Load more"
-        wait_for_ajax
 
         expect(page).to have_table_row({ "Subject" => "Thank you!" })
         expect(page).to have_table_row({ "Subject" => "Email 3 (sent)" })
@@ -323,12 +307,10 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
         create(:scheduled_installment, seller:, link: product, name: "Scheduled Post")
 
         visit "#{emails_path}/published"
-        wait_for_ajax
 
         select_disclosure "Toggle Search" do
           fill_in "Search emails", with: "email"
         end
-        wait_for_ajax
 
         expect(page).to have_table_row(count: 3) # including header row
         expect(page).to have_table_row({ "Subject" => "Email 1 (sent)" })
@@ -338,7 +320,6 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
 
         # Reset the search
         fill_in "Search emails", with: ""
-        wait_for_ajax
 
         expect(page).to have_table_row(count: 4) # including header row
         expect(page).to have_table_row({ "Subject" => "Email 1 (sent)" })
@@ -346,12 +327,10 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
         expect(page).to have_table_row({ "Subject" => "Published post" })
 
         select_tab "Scheduled"
-        wait_for_ajax
 
         select_disclosure "Toggle Search" do
           fill_in "Search emails", with: "email"
         end
-        wait_for_ajax
 
         expect(page).to have_table_row(count: 3) # including header row
         expect(page).to have_table_row({ "Subject" => "Email 5 (scheduled)" })
@@ -361,7 +340,6 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
 
         # Reset the search
         fill_in "Search emails", with: ""
-        wait_for_ajax
 
         expect(page).to have_table_row(count: 4) # including header row
         expect(page).to have_table_row({ "Subject" => "Email 5 (scheduled)" })
@@ -369,12 +347,10 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
         expect(page).to have_table_row({ "Subject" => "Scheduled Post" })
 
         select_tab "Drafts"
-        wait_for_ajax
 
         select_disclosure "Toggle Search" do
           fill_in "Search emails", with: "email"
         end
-        wait_for_ajax
 
         expect(page).to have_table_row(count: 3) # including header row
         expect(page).to have_table_row({ "Subject" => "Email 2 (draft)" })
@@ -384,7 +360,6 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
 
         # Reset the search
         fill_in "Search emails", with: ""
-        wait_for_ajax
 
         expect(page).to have_table_row(count: 4) # including header row
         expect(page).to have_table_row({ "Subject" => "Email 2 (draft)" })

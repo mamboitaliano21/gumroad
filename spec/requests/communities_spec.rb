@@ -36,8 +36,6 @@ describe "Communities", :js, type: :system do
     it "shows the community and allows the seller to send, edit, and delete own messages" do
       visit community_path(seller.external_id, community.external_id)
 
-      wait_for_ajax
-
       expect(page).to have_current_path(community_path(seller.external_id, community.external_id), ignore_query: true)
 
       within "[aria-label='Sidebar']" do
@@ -84,7 +82,6 @@ describe "Communities", :js, type: :system do
             fill_in "Edit message", with: "This is wonderful!"
             sleep 0.5 # wait for the state to update
             click_on "Save"
-            wait_for_ajax
           end
 
           expect(page).to have_message("This is wonderful!")
@@ -99,7 +96,6 @@ describe "Communities", :js, type: :system do
               expect(page).to have_text("Are you sure you want to delete this message? This cannot be undone.")
               click_on "Delete"
             end
-            wait_for_ajax
           end
 
           expect(page).not_to have_message("This is wonderful!")
@@ -129,7 +125,6 @@ describe "Communities", :js, type: :system do
           click_on "Delete"
         end
       end
-      wait_for_ajax
 
       expect(page).not_to have_message("Hello, world!")
       expect(customer_message.reload).to be_deleted
@@ -160,7 +155,6 @@ describe "Communities", :js, type: :system do
         click_on "Save"
       end
 
-      wait_for_ajax
       expect(page).to have_alert(text: "Changes saved!")
       expect(page).to have_no_selector(".bg-backdrop", wait: 5)
       expect(seller.reload.community_notification_settings.find_by(seller:).recap_frequency).to eq("weekly")
@@ -178,7 +172,6 @@ describe "Communities", :js, type: :system do
         click_on "Save"
       end
 
-      wait_for_ajax
       expect(page).to have_alert(text: "Changes saved!")
       expect(page).to have_no_selector(".bg-backdrop", wait: 5)
       expect(seller.reload.community_notification_settings.find_by(seller:).recap_frequency).to eq("daily")
@@ -198,7 +191,6 @@ describe "Communities", :js, type: :system do
         click_on "Save"
       end
 
-      wait_for_ajax
       expect(page).to have_alert(text: "Changes saved!")
       expect(page).to have_no_selector(".bg-backdrop", wait: 5)
       expect(seller.reload.community_notification_settings.find_by(seller:).recap_frequency).to be_nil
@@ -211,7 +203,6 @@ describe "Communities", :js, type: :system do
 
       visit community_path(seller.external_id, community.external_id)
 
-      wait_for_ajax
       within "[aria-label='Sidebar']" do
         within "[aria-label='Community list']" do
           expect(page).to have_link("Mastering Rails", href: community_path(seller.external_id, community.external_id))
@@ -233,7 +224,6 @@ describe "Communities", :js, type: :system do
 
       within "[aria-label='Sidebar']" do
         click_link "Scaling web apps"
-        wait_for_ajax
         expect(page).to have_link("Mastering Rails", aria: { selected: "false" })
         expect(page).to have_link("Scaling web apps", aria: { selected: "true" })
       end
@@ -269,7 +259,6 @@ describe "Communities", :js, type: :system do
 
       within "[aria-label='Sidebar']" do
         click_link "Mastering Rails"
-        wait_for_ajax
         expect(page).to have_link("Mastering Rails", aria: { selected: "true" })
         expect(page).to have_link("Scaling web apps", aria: { selected: "false" })
       end
@@ -303,7 +292,6 @@ describe "Communities", :js, type: :system do
     it "shows the community and allows the buyer to send, edit, and delete own messages" do
       visit community_path(seller.external_id, community.external_id)
 
-      wait_for_ajax
       within "[aria-label='Sidebar']" do
         within "[aria-label='Community switcher area']" do
           expect(page).to have_text("Bob")
@@ -350,7 +338,6 @@ describe "Communities", :js, type: :system do
             fill_in "Edit message", with: "This is wonderful!"
             sleep 0.5 # wait for the state to update
             click_on "Save"
-            wait_for_ajax
           end
 
           expect(page).to have_message("This is wonderful!")
@@ -365,7 +352,6 @@ describe "Communities", :js, type: :system do
               expect(page).to have_text("Are you sure you want to delete this message? This cannot be undone.")
               click_on "Delete"
             end
-            wait_for_ajax
           end
 
           expect(page).not_to have_message("This is wonderful!")
@@ -417,7 +403,6 @@ describe "Communities", :js, type: :system do
         click_on "Save"
       end
 
-      wait_for_ajax
       expect(page).to have_alert(text: "Changes saved!")
       expect(page).to have_no_selector(".bg-backdrop", wait: 5)
       expect(buyer.reload.community_notification_settings.find_by(seller:).recap_frequency).to eq("weekly")
@@ -435,7 +420,6 @@ describe "Communities", :js, type: :system do
         click_on "Save"
       end
 
-      wait_for_ajax
       expect(page).to have_alert(text: "Changes saved!")
       expect(page).to have_no_selector(".bg-backdrop", wait: 5)
       expect(buyer.reload.community_notification_settings.find_by(seller:).recap_frequency).to eq("daily")
@@ -455,7 +439,6 @@ describe "Communities", :js, type: :system do
         click_on "Save"
       end
 
-      wait_for_ajax
       expect(page).to have_alert(text: "Changes saved!")
       expect(page).to have_no_selector(".bg-backdrop", wait: 5)
       expect(buyer.reload.community_notification_settings.find_by(seller:).recap_frequency).to be_nil
@@ -468,8 +451,6 @@ describe "Communities", :js, type: :system do
       create(:community_chat_message, community: community2, user: seller, content: "Are you ready to scale your web app?")
 
       visit community_path(seller.external_id, community.external_id)
-
-      wait_for_ajax
 
       expect(page).to have_current_path(community_path(seller.external_id, community.external_id), ignore_query: true)
 
@@ -509,7 +490,6 @@ describe "Communities", :js, type: :system do
 
       within "[aria-label='Sidebar']" do
         click_link "Scaling web apps"
-        wait_for_ajax
         expect(page).to have_link("Mastering Rails", aria: { selected: "false" })
         expect(page).to have_link("Scaling web apps", aria: { selected: "true" })
       end
@@ -549,7 +529,6 @@ describe "Communities", :js, type: :system do
 
       within "[aria-label='Sidebar']" do
         click_link "Mastering Rails"
-        wait_for_ajax
         expect(page).to have_link("Mastering Rails", aria: { selected: "true" })
         expect(page).to have_link("Scaling web apps", aria: { selected: "false" })
       end
@@ -578,8 +557,6 @@ describe "Communities", :js, type: :system do
       create(:community_chat_message, community: other_community, user: other_seller, content: "Get excited!")
 
       visit community_path(seller.external_id, community.external_id)
-
-      wait_for_ajax
 
       expect(page).to have_current_path(community_path(seller.external_id, community.external_id))
 
@@ -614,7 +591,6 @@ describe "Communities", :js, type: :system do
       within "[aria-label='Sidebar']" do
         select_disclosure "Switch creator"
         click_on "Alice"
-        wait_for_ajax
         within "[aria-label='Community switcher area']" do
           expect(page).to have_text("Alice")
         end
@@ -666,7 +642,6 @@ describe "Communities", :js, type: :system do
       within "[aria-label='Sidebar']" do
         select_disclosure "Switch creator"
         click_on "Bob"
-        wait_for_ajax
         within "[aria-label='Community switcher area']" do
           expect(page).to have_text("Bob")
         end
@@ -698,7 +673,6 @@ describe "Communities", :js, type: :system do
     it "allows accessing a community directly via URL" do
       visit community_path(seller.external_id, community.external_id)
 
-      wait_for_ajax
       within "[aria-label='Sidebar']" do
         within "[aria-label='Community switcher area']" do
           expect(page).to have_text("Bob")
@@ -735,7 +709,6 @@ describe "Communities", :js, type: :system do
     it "opens notifications modal when accessing community URL with notifications parameter" do
       visit community_path(seller.external_id, community.external_id, notifications: "true")
 
-      wait_for_ajax
       within "[aria-label='Sidebar']" do
         within "[aria-label='Community switcher area']" do
           expect(page).to have_text("Bob")

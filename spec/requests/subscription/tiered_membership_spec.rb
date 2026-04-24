@@ -28,23 +28,18 @@ describe "Tiered Membership Spec", type: :system, js: true do
     visit "/subscriptions/#{@subscription.external_id}/manage?token=#{@subscription.token}"
 
     choose "Second Tier"
-    wait_for_ajax
     expect(page).to have_text "You'll be charged US$6.55"
 
     choose "Tier 3"
-    wait_for_ajax
     expect(page).not_to have_text "You'll be charged"
 
     choose "First Tier"
-    wait_for_ajax
     expect(page).not_to have_text "You'll be charged"
 
     select("Yearly", from: "Recurrence")
-    wait_for_ajax
     expect(page).to have_text "You'll be charged US$6.05"
 
     select("Monthly", from: "Recurrence")
-    wait_for_ajax
     expect(page).not_to have_text "You'll be charged"
   end
 
@@ -59,7 +54,6 @@ describe "Tiered Membership Spec", type: :system, js: true do
       visit "/subscriptions/#{@subscription.external_id}/manage?token=#{@subscription.token}"
 
       click_on "Restart membership"
-      wait_for_ajax
 
       expect(page).to have_alert(text: "Membership restarted")
       expect(@subscription.reload.purchases.successful.count).to eq 2
@@ -83,7 +77,6 @@ describe "Tiered Membership Spec", type: :system, js: true do
       visit "/subscriptions/#{@subscription.external_id}/manage?token=#{@subscription.token}"
 
       click_on "Restart membership"
-      wait_for_ajax
 
       expect(page).to have_alert(text: "Membership restarted")
       expect(@subscription.reload.purchases.successful.count).to eq 2
@@ -99,7 +92,6 @@ describe "Tiered Membership Spec", type: :system, js: true do
         expect(page).to have_text "You'll be charged US$10.99"
 
         click_on "Restart membership"
-        wait_for_ajax
 
         expect(page).to have_alert(text: "Membership restarted")
         expect(@subscription.reload.purchases.successful.count).to eq 2
@@ -122,7 +114,6 @@ describe "Tiered Membership Spec", type: :system, js: true do
         expect(page).to have_text("You'll be charged US$5.99")
 
         click_on "Restart membership"
-        wait_for_ajax
 
         expect(page).to have_alert(text: "Membership restarted")
         expect(@subscription.reload.purchases.successful.count).to eq 2
@@ -166,7 +157,6 @@ describe "Tiered Membership Spec", type: :system, js: true do
       click_on "Use a different card?"
       fill_in_credit_card(number: CardParamsSpecHelper.card_number(:success))
       click_on "Update membership"
-      wait_for_ajax
 
       expect(page).to have_alert(text: "Your membership has been updated.")
       expect(@subscription.reload.credit_card).not_to eq @credit_card
@@ -180,23 +170,18 @@ describe "Tiered Membership Spec", type: :system, js: true do
       visit "/subscriptions/#{@subscription.external_id}/manage?token=#{@subscription.token}"
 
       choose "Second Tier"
-      wait_for_ajax
       expect(page).to have_text "You'll be charged US$10.50"
 
       choose "Tier 3"
-      wait_for_ajax
       expect(page).to have_text "You'll be charged US$4"
 
       choose "First Tier"
-      wait_for_ajax
       expect(page).to have_text "You'll be charged US$5.99"
 
       select("Yearly", from: "Recurrence")
-      wait_for_ajax
       expect(page).to have_text "You'll be charged US$10"
 
       select("Monthly", from: "Recurrence")
-      wait_for_ajax
       expect(page).to have_text "You'll be charged US$3"
     end
 
@@ -213,7 +198,6 @@ describe "Tiered Membership Spec", type: :system, js: true do
         click_on "Use a different card?"
         fill_in_credit_card(number: CardParamsSpecHelper.card_number(:success))
         click_on "Update membership"
-        wait_for_ajax
 
         expect(page).to have_alert(text: "Your membership has been updated.")
         expect(@subscription.reload.credit_card).not_to eq @credit_card
@@ -264,7 +248,6 @@ describe "Tiered Membership Spec", type: :system, js: true do
         expect(page).to have_text "You'll be charged US$0.99"
 
         click_on "Update membership"
-        wait_for_ajax
 
         expect(page).to have_alert(text: "Your membership has been updated.")
         expect(@subscription.reload.purchases.last.displayed_price_cents).to eq 99
@@ -284,12 +267,10 @@ describe "Tiered Membership Spec", type: :system, js: true do
           pwyw_input = find_field "Name a fair price"
           pwyw_input.fill_in with: ""
           pwyw_input.fill_in with: "7.50"
-          wait_for_ajax
 
           expect(page).to have_text "You'll be charged US$0.99"
 
           click_on "Update membership"
-          wait_for_ajax
 
           expect(page).to have_alert(text: "Your membership has been updated.")
           expect(@subscription.reload.purchases.last.displayed_price_cents).to eq 99
@@ -310,12 +291,10 @@ describe "Tiered Membership Spec", type: :system, js: true do
 
           pwyw_input = find_field("Name a fair price")
           pwyw_input.fill_in with: "6.50"
-          wait_for_ajax
 
           expect(page).to have_text "You'll be charged US$0.99"
 
           click_on "Update membership"
-          wait_for_ajax
 
           expect(page).to have_alert(text: "Your membership has been updated.")
           expect(@subscription.reload.purchases.last.displayed_price_cents).to eq 99
@@ -339,7 +318,6 @@ describe "Tiered Membership Spec", type: :system, js: true do
           expect(page).to have_text "You'll be charged US#{displayed_upgrade_charge_in_usd}"
 
           click_on "Update membership"
-          wait_for_ajax
 
           expect(page).to have_alert(text: "Your membership has been updated.")
           expect(@subscription.reload.purchases.last.displayed_price_cents).to eq @min_price_in_currency
@@ -393,7 +371,6 @@ describe "Tiered Membership Spec", type: :system, js: true do
       choose "Second Tier"
       wait_for_ajax
       click_on "Update membership"
-      wait_for_ajax
 
       expect(page).to have_alert(text: "Your membership has been updated.")
 

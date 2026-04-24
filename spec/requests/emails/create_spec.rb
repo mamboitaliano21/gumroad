@@ -27,10 +27,7 @@ describe("Email Creation Flow", :js, type: :system) do
 
     visit emails_path
 
-    wait_for_ajax
     click_on "New email", match: :first
-    wait_for_ajax
-
     expect(page).to have_content("New email")
     # Ensure that the "Everyone" audience type is selected by default
     expect(page).to have_radio_button "Everyone", checked: true
@@ -38,17 +35,14 @@ describe("Email Creation Flow", :js, type: :system) do
 
     # It updates the audience count when the audience type is changed
     choose "Customers only"
-    wait_for_ajax
     expect(page).to have_text("Audience 2 / 3", normalize_ws: true)
 
     # It shows the correct options for bought/not bought filters and updates the audience count when those are changed
     find(:combo_box, "Bought").click
     expect(page).to have_combo_box("Bought", expanded: true, with_options: ["Sample product", "Another product"])
     select_combo_box_option "Sample product", from: "Bought"
-    wait_for_ajax
     expect(page).to have_text("Audience 2 / 3", normalize_ws: true)
     select_combo_box_option "Another product", from: "Has not yet bought"
-    wait_for_ajax
     expect(page).to have_text("Audience 1 / 3", normalize_ws: true)
 
     fill_in "Paid more than", with: "1"
@@ -64,7 +58,6 @@ describe("Email Creation Flow", :js, type: :system) do
     end
 
     select "Canada", from: "From"
-    wait_for_ajax
     expect(page).to have_text("Audience 0 / 3", normalize_ws: true)
 
     expect(page).to have_checked_field("Allow comments")
@@ -85,7 +78,6 @@ describe("Email Creation Flow", :js, type: :system) do
     attach_file(file_fixture("test.jpg")) do
       click_on "Insert image"
     end
-    wait_for_ajax
 
     # Allows attaching files to the email
     upload_attachment("thing.mov")
@@ -101,7 +93,6 @@ describe("Email Creation Flow", :js, type: :system) do
 
     expect(page).to have_button("Save", disabled: false)
     click_on "Save"
-    wait_for_ajax
     expect(page).to have_alert(text: "Email created!")
 
     installment = Installment.last
@@ -194,7 +185,6 @@ describe("Email Creation Flow", :js, type: :system) do
     set_rich_text_editor_input(find("[aria-label='Email message']"), to_text: "Hello, world!")
     sleep 0.5 # wait for the message editor to update
     click_on "Save"
-    wait_for_ajax
     expect(page).to have_alert(text: "Email created!")
 
     installment = Installment.last
@@ -256,7 +246,6 @@ describe("Email Creation Flow", :js, type: :system) do
     set_rich_text_editor_input(find("[aria-label='Email message']"), to_text: "Hello, world!")
     sleep 0.5 # wait for the message editor to update
     click_on "Save"
-    wait_for_ajax
     expect(page).to have_alert(text: "Email created!")
 
     installment = Installment.last
@@ -360,10 +349,8 @@ describe("Email Creation Flow", :js, type: :system) do
     expect(page).to have_unchecked_field("All products")
 
     # Ensure that the updated audience count is correct
-    wait_for_ajax
     expect(page).to have_text("Audience 0 / 3", normalize_ws: true)
     check "All products"
-    wait_for_ajax
     expect(page).to have_text("Audience 1 / 3", normalize_ws: true)
 
     # Check presence of other filters and make some changes
@@ -379,7 +366,6 @@ describe("Email Creation Flow", :js, type: :system) do
     sleep 0.5 # wait for the message editor to update
 
     click_on "Save"
-    wait_for_ajax
     expect(page).to have_alert(text: "Email created!")
 
     installment = Installment.last
@@ -472,8 +458,6 @@ describe("Email Creation Flow", :js, type: :system) do
     create(:purchase, link: product)
 
     visit "#{emails_path}/new?product=#{product.unique_permalink}"
-    wait_for_ajax
-
     expect(page).to have_radio_button("Customers only", checked: true)
     find(:combo_box, "Bought").click
     within(:fieldset, "Bought") do
@@ -486,7 +470,6 @@ describe("Email Creation Flow", :js, type: :system) do
 
     sleep 0.5 # wait for the message editor to update
     click_on "Save"
-    wait_for_ajax
     expect(page).to have_alert(text: "Email created!")
 
     installment = Installment.last
@@ -535,7 +518,6 @@ describe("Email Creation Flow", :js, type: :system) do
       sleep 0.5 # wait for the message editor to update
 
       click_on "Save"
-      wait_for_ajax
       expect(page).to have_alert(text: "Email created!")
 
       installment = Installment.last
@@ -584,7 +566,6 @@ describe("Email Creation Flow", :js, type: :system) do
       fill_in "Schedule date", with: "01/01/2021\t04:00PM"
       click_on "Schedule"
     end
-    wait_for_ajax
     expect(page).to have_alert("Please select a date and time in the future.")
     expect(page).to have_current_path("#{emails_path}/new")
     expect(Installment.count).to eq(0)
@@ -595,7 +576,6 @@ describe("Email Creation Flow", :js, type: :system) do
       fill_in "Schedule date", with: "01/01/#{Date.today.year.next}\t04:00PM"
       click_on "Schedule"
     end
-    wait_for_ajax
     expect(page).to have_alert("Email successfully scheduled!")
     expect(page).to have_current_path("#{emails_path}/scheduled")
     expect(page).to have_table_row({ "Subject" => "Hello" })
@@ -678,8 +658,6 @@ describe("Email Creation Flow", :js, type: :system) do
     select_disclosure "Publish" do
       click_on "Publish now"
     end
-    wait_for_ajax
-
     expect(page).to have_alert(text: "You are not eligible to publish or schedule emails. Please ensure you have made at least $100 in sales and received a payout.")
     expect(Installment.count).to eq(0)
   end
@@ -705,7 +683,6 @@ describe("Email Creation Flow", :js, type: :system) do
         expect(page).to have_button("Preview Post")
         click_on "Preview Email"
       end
-      wait_for_ajax
       expect(page).to have_alert(text: "A preview has been sent to your email.")
 
       installment = Installment.last
@@ -732,12 +709,10 @@ describe("Email Creation Flow", :js, type: :system) do
           click_on "Preview Post"
         end
 
-        wait_for_ajax
         expect(page).to have_alert(text: "Preview link opened.")
       end
 
       within_window new_window do
-        wait_for_ajax
         expect(page).to have_text("My post")
         expect(page).to have_text("Hello, world!")
       end
@@ -777,7 +752,6 @@ describe("Email Creation Flow", :js, type: :system) do
       sleep 0.5 # wait for the message editor to update
 
       click_on "Preview"
-      wait_for_ajax
       expect(page).to have_alert(text: "Please set at least one channel for your update.")
       expect(Installment.count).to eq(0)
 
@@ -786,7 +760,6 @@ describe("Email Creation Flow", :js, type: :system) do
       check "Send email"
       expect(page).to_not have_disclosure("Preview")
       click_on "Preview"
-      wait_for_ajax
       expect(page).to have_alert(text: "A preview has been sent to your email.")
 
       installment = Installment.last
@@ -812,12 +785,10 @@ describe("Email Creation Flow", :js, type: :system) do
 
       new_window = window_opened_by do
         click_on "Preview"
-        wait_for_ajax
         expect(page).to have_alert(text: "Preview link opened.")
       end
 
       within_window new_window do
-        wait_for_ajax
         expect(page).to have_text("My post")
         expect(page).to have_text("Hello, world!")
       end
@@ -857,7 +828,6 @@ describe("Email Creation Flow", :js, type: :system) do
     # Duplicate the email
     find(:table_row, text: "Hello").click
     click_on "Duplicate"
-    wait_for_ajax
     expect(page).to have_current_path("#{emails_path}/new?copy_from=#{Installment.last.external_id}")
 
     # Ensure that it auto-populates the fields
