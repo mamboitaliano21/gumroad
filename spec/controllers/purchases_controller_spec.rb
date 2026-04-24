@@ -665,14 +665,19 @@ describe PurchasesController, :vcr do
         index_model_records(Purchase)
       end
 
+      def csv_safe(value)
+        # CSV 3.3+ prepends ' to values starting with =, +, -, @ to prevent formula injection
+        value&.match?(/\A[=+\-@]/) ? "'#{value}" : value
+      end
+
       def expect_correct_csv(csv_string)
         csv = CSV.parse(csv_string)
         expect(csv.size).to eq(5)
         expect(csv[0]).to eq(Exports::PurchaseExportService::PURCHASE_FIELDS + ["Age", "Height", "Citizenship"])
         # Test the correct purchase is listed with the expected custom fields values.
-        expect([csv[1].first] + csv[1].last(3)).to eq([@purchase_1.external_id, "25", nil, nil])
-        expect([csv[2].first] + csv[2].last(3)).to eq([@purchase_2.external_id, nil, nil, "Japan"])
-        expect([csv[3].first] + csv[3].last(3)).to eq([@purchase_3.external_id, nil, nil, nil])
+        expect([csv[1].first] + csv[1].last(3)).to eq([csv_safe(@purchase_1.external_id), "25", nil, nil])
+        expect([csv[2].first] + csv[2].last(3)).to eq([csv_safe(@purchase_2.external_id), nil, nil, "Japan"])
+        expect([csv[3].first] + csv[3].last(3)).to eq([csv_safe(@purchase_3.external_id), nil, nil, nil])
         expect([csv[4].first] + csv[4].last(3)).to eq(["Totals", nil, nil, nil])
       end
 
