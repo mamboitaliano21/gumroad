@@ -42,8 +42,8 @@ class BaseVariant < ApplicationRecord
 
   def mark_deleted
     super
-    DeleteProductRichContentWorker.perform_async(variant_category.link_id, id)
-    DeleteProductFilesArchivesWorker.perform_async(variant_category.link_id, id)
+    DeleteProductRichContentWorker.perform_async(link.id, id)
+    DeleteProductFilesArchivesWorker.perform_async(link.id, id)
   end
 
   def price_difference_in_currency_units

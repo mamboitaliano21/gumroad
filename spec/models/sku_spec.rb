@@ -78,6 +78,22 @@ describe Sku do
     end
   end
 
+  describe "#mark_deleted" do
+    it "marks the sku deleted and enqueues deletion for rich content and product file archives" do
+      product = create(:product)
+      sku = create(:sku, link: product)
+
+      freeze_time do
+        expect do
+          sku.mark_deleted
+        end.to change { sku.reload.deleted_at }.from(nil).to(Time.current)
+
+        expect(DeleteProductRichContentWorker).to have_enqueued_sidekiq_job(product.id, sku.id)
+        expect(DeleteProductFilesArchivesWorker).to have_enqueued_sidekiq_job(product.id, sku.id)
+      end
+    end
+  end
+
   describe "updating price_difference_cents" do
     let(:product) { create(:product) }
     let!(:sku) { create(:sku, link: product, custom_sku: "customSKU", price_difference_cents: 20) }
