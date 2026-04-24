@@ -320,6 +320,7 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
 
         # Reset the search
         fill_in "Search emails", with: ""
+        wait_for_ajax
 
         expect(page).to have_table_row(count: 4) # including header row
         expect(page).to have_table_row({ "Subject" => "Email 1 (sent)" })
@@ -340,6 +341,7 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
 
         # Reset the search
         fill_in "Search emails", with: ""
+        wait_for_ajax
 
         expect(page).to have_table_row(count: 4) # including header row
         expect(page).to have_table_row({ "Subject" => "Email 5 (scheduled)" })
@@ -360,6 +362,7 @@ describe("Email List", :js, :sidekiq_inline, :elasticsearch_wait_for_refresh, ty
 
         # Reset the search
         fill_in "Search emails", with: ""
+        wait_for_ajax
 
         expect(page).to have_table_row(count: 4) # including header row
         expect(page).to have_table_row({ "Subject" => "Email 2 (draft)" })

@@ -371,6 +371,7 @@ describe "Tiered Membership Spec", type: :system, js: true do
       choose "Second Tier"
       wait_for_ajax
       click_on "Update membership"
+      wait_for_ajax
 
       expect(page).to have_alert(text: "Your membership has been updated.")
 
