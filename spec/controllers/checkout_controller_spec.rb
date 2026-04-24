@@ -52,6 +52,28 @@ describe CheckoutController, type: :controller, inertia: true do
       )
     end
 
+    describe "timeout fallbacks" do
+      it "returns nil cart when cart props time out" do
+        allow_any_instance_of(CartPresenter).to receive(:cart_props).and_raise(Timeout::Error)
+
+        expect { get :show }.not_to raise_error
+
+        expect(response).to be_successful
+        expect(inertia.component).to eq("Checkout/Show")
+        expect(inertia.props[:cart]).to be_nil
+      end
+
+      it "returns fallback checkout props when checkout props time out" do
+        allow_any_instance_of(CheckoutPresenter).to receive(:checkout_props).and_raise(Timeout::Error)
+
+        get :show
+
+        expect(response).to be_successful
+        expect(inertia.component).to eq("Checkout/Show")
+        expect(inertia.props[:checkout]).to eq(CheckoutPresenter.new(logged_in_user: nil, ip: request.remote_ip).checkout_fallback_props)
+      end
+    end
+
     describe "process_cart_id_param check" do
       let(:user) { create(:user) }
       let(:cart) { create(:cart, user:) }

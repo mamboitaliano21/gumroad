@@ -47,6 +47,27 @@ class CheckoutPresenter
     }
   end
 
+  def checkout_fallback_props
+    {
+      **checkout_common,
+      country: Compliance::Countries.find_by_name(logged_in_user&.country)&.alpha2,
+      state: logged_in_user&.state,
+      address: logged_in_user ? {
+        street: logged_in_user.street_address,
+        zip: logged_in_user.zip_code,
+        city: logged_in_user.city,
+      } : nil,
+      saved_credit_card: CheckoutPresenter.saved_card(logged_in_user&.credit_card),
+      gift: nil,
+      clear_cart: false,
+      add_products: [],
+      max_allowed_cart_products: Cart::MAX_ALLOWED_CART_PRODUCTS,
+      cart_save_debounce_ms: CART_SAVE_DEBOUNCE_DURATION_IN_SECONDS.in_milliseconds,
+      tip_options: TipOptionsService.get_tip_options,
+      default_tip_option: TipOptionsService.get_default_tip_option,
+    }
+  end
+
   def checkout_product(product, cart_item, params, include_cross_sells: true)
     return unless product.present?
     upsell_variants = product.available_upsell_variants.alive.includes(:selected_variant, :offered_variant)

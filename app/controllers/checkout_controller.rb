@@ -1,14 +1,28 @@
 # frozen_string_literal: true
 
 class CheckoutController < ApplicationController
+  CHECKOUT_PROPS_TIMEOUT_SECONDS = 60
+  RECOMMENDED_PRODUCTS_TIMEOUT_SECONDS = 10
+
   layout "inertia"
 
   before_action :process_cart_id_param, only: [:show]
 
   def show
+    browser_guid = cookies[:_gumroad_guid]
+    checkout_presenter = CheckoutPresenter.new(logged_in_user:, ip: request.remote_ip)
+
     render inertia: "Checkout/Show", props: {
-      cart: -> { CartPresenter.new(logged_in_user:, ip: request.remote_ip, browser_guid: cookies[:_gumroad_guid]).cart_props },
-      checkout: -> { CheckoutPresenter.new(logged_in_user:, ip: request.remote_ip).checkout_props(params:, browser_guid: cookies[:_gumroad_guid]) },
+      cart: -> do
+        with_checkout_props_timeout(prop_name: "cart", fallback: -> { nil }) do
+          CartPresenter.new(logged_in_user:, ip: request.remote_ip, browser_guid:).cart_props
+        end
+      end,
+      checkout: -> do
+        with_checkout_props_timeout(prop_name: "checkout", fallback: -> { checkout_presenter.checkout_fallback_props }) do
+          checkout_presenter.checkout_props(params:, browser_guid:)
+        end
+      end,
       recommended_products: InertiaRails.optional { recommended_products },
     }
   end
@@ -106,8 +120,6 @@ class CheckoutController < ApplicationController
       true
     end
 
-    RECOMMENDED_PRODUCTS_TIMEOUT_SECONDS = 10
-
     def recommended_products
       args = {
         purchaser: logged_in_user,
@@ -132,6 +144,13 @@ class CheckoutController < ApplicationController
     rescue Timeout::Error
       Rails.logger.warn("[CheckoutController] Recommended products timed out after #{RECOMMENDED_PRODUCTS_TIMEOUT_SECONDS}s")
       []
+    end
+
+    def with_checkout_props_timeout(prop_name:, fallback:, &block)
+      Timeout.timeout(CHECKOUT_PROPS_TIMEOUT_SECONDS, &block)
+    rescue Timeout::Error
+      Rails.logger.warn("[CheckoutController] #{prop_name} props timed out after #{CHECKOUT_PROPS_TIMEOUT_SECONDS}s")
+      fallback.call
     end
 
     def update_permitted_params

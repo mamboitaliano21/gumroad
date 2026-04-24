@@ -25,6 +25,8 @@ class CartPresenter
           :variant_categories_alive,
           :alive_variants,
           { available_upsell: :seller },
+          { available_cross_sells: [:product, :offer_code, :variant] },
+          :available_upsell_variants,
         ] }
       ).load
 
