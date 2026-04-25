@@ -29,5 +29,7 @@ class TaxIdValidationService
     def valid_tax_id?
       response = HTTParty.get(TAX_ID_PRO_ENDPOINT_TEMPLATE.expand(country_code:, tax_id:).to_s, headers: TAX_ID_PRO_HEADERS, timeout: 5)
       response.code == 200 && response.parsed_response["is_valid"]
+    rescue Net::OpenTimeout, Net::ReadTimeout, Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError
+      false
     end
 end

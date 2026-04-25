@@ -29,4 +29,14 @@ describe TaxIdValidationService, :vcr do
   it "returns false when the tax id is not valid" do
     expect(described_class.new("1234567890", country_code).process).to be(false)
   end
+
+  it "returns false when the API request times out" do
+    allow(HTTParty).to receive(:get).and_raise(Net::OpenTimeout)
+    expect(described_class.new(tax_id, country_code).process).to be(false)
+  end
+
+  it "returns false when the API connection is refused" do
+    allow(HTTParty).to receive(:get).and_raise(Errno::ECONNREFUSED)
+    expect(described_class.new(tax_id, country_code).process).to be(false)
+  end
 end
