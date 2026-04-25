@@ -210,7 +210,7 @@ RSpec.describe ContentModeration::Strategies::ClassifierStrategy, :vcr do
     expect(Rails.logger).to have_received(:warn).with(/error on attempt 2\/3, retrying/).once
   end
 
-  it "gives up after MAX_MODERATION_ATTEMPTS timeouts and re-raises" do
+  it "gives up after MAX_MODERATION_ATTEMPTS timeouts and re-raises for text moderation" do
     allow(client).to receive(:moderations).and_raise(Faraday::TimeoutError, "Net::ReadTimeout")
 
     expect { described_class.new(text:, image_urls: []).perform }.to raise_error(Faraday::TimeoutError)
@@ -237,5 +237,52 @@ RSpec.describe ContentModeration::Strategies::ClassifierStrategy, :vcr do
 
     expect { described_class.new(text:, image_urls: []).perform }.to raise_error(Faraday::ParsingError)
     expect(client).to have_received(:moderations).exactly(described_class::MAX_MODERATION_ATTEMPTS).times
+  end
+
+  it "skips image URLs that time out after all retry attempts and continues with remaining images" do
+    image_urls = [
+      "https://cdn.example.com/slow.png",
+      "https://cdn.example.com/good.png",
+    ]
+
+    call_inputs = []
+    allow(client).to receive(:moderations) do |parameters:|
+      call_inputs << parameters[:input]
+      part = parameters[:input].first
+      if part[:type] == "image_url" && part[:image_url][:url] == "https://cdn.example.com/slow.png"
+        raise Faraday::TimeoutError, "Net::ReadTimeout"
+      end
+      { "results" => [{ "category_scores" => {} }] }
+    end
+
+    result = described_class.new(text: "", image_urls:).perform
+
+    expect(result.status).to eq("compliant")
+    expect(Rails.logger).to have_received(:warn).with(/skipping timed-out image URL=https:\/\/cdn\.example\.com\/slow\.png/).once
+    good_calls = call_inputs.select { |input| input.first[:type] == "image_url" && input.first[:image_url][:url] == "https://cdn.example.com/good.png" }
+    expect(good_calls.size).to eq(1)
+  end
+
+  it "notifies when all images time out and none could be moderated" do
+    image_urls = [
+      "https://cdn.example.com/slow-1.png",
+      "https://cdn.example.com/slow-2.png",
+    ]
+
+    allow(client).to receive(:moderations) do |parameters:|
+      part = parameters[:input].first
+      raise Faraday::TimeoutError, "Net::ReadTimeout" if part[:type] == "image_url"
+      { "results" => [{ "category_scores" => {} }] }
+    end
+
+    result = described_class.new(text: "some text", image_urls:).perform
+
+    expect(result.status).to eq("flagged")
+    expect(result.reasoning).to eq([described_class::UNAVAILABLE_REASON])
+    expect(ErrorNotifier).to have_received(:notify).with(
+      "ContentModeration::ClassifierStrategy could not moderate any image",
+      image_url_count: 2,
+      skipped_urls: match_array(image_urls),
+    )
   end
 end

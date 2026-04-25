@@ -93,7 +93,9 @@ class ContentModeration::Strategies::ClassifierStrategy
           Rails.logger.warn("ContentModeration::ClassifierStrategy error on attempt #{attempts}/#{MAX_MODERATION_ATTEMPTS}, retrying: #{e.message}")
           retry
         end
-        raise
+        raise if skip_url.nil?
+        Rails.logger.warn("ContentModeration::ClassifierStrategy skipping timed-out image URL=#{skip_url} after #{MAX_MODERATION_ATTEMPTS} attempts")
+        nil
       rescue Faraday::BadRequestError => e
         raise if skip_url.nil?
         body = e.response&.dig(:body).to_s
