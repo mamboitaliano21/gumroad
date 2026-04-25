@@ -47,6 +47,7 @@ class InstallmentRule < ApplicationRecord
     when MONTH
       period = 1.month
     end
+    return 0 if delayed_delivery_time.nil? || period.nil?
     (delayed_delivery_time / period).to_i
   end
 

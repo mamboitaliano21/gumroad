@@ -60,6 +60,16 @@ describe InstallmentRule do
       @post_rule.update(delayed_delivery_time: 1.month, time_period: "month")
       expect(@post_rule.displayable_time_duration).to eq(1)
     end
+
+    it "returns 0 when delayed_delivery_time is nil" do
+      @post_rule.update_columns(delayed_delivery_time: nil)
+      expect(@post_rule.reload.displayable_time_duration).to eq(0)
+    end
+
+    it "returns 0 when time_period is nil" do
+      @post_rule.update_columns(time_period: nil)
+      expect(@post_rule.reload.displayable_time_duration).to eq(0)
+    end
   end
 
   describe "validations" do
