@@ -41,6 +41,23 @@ describe CartProduct do
       end
     end
 
+    describe "referrer" do
+      context "when referrer is blank" do
+        it "marks the cart product as invalid" do
+          cart_product = build(:cart_product, referrer: "")
+          expect(cart_product).to be_invalid
+          expect(cart_product.errors[:referrer]).to include("can't be blank")
+        end
+      end
+
+      context "when referrer is present" do
+        it "marks the cart product as valid" do
+          cart_product = build(:cart_product, referrer: "direct")
+          expect(cart_product).to be_valid
+        end
+      end
+    end
+
     describe "accepted offer details" do
       context "when accepted offer details is empty" do
         it "marks the cart product as valid" do

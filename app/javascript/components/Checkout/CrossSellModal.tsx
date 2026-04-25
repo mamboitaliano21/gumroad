@@ -1,5 +1,6 @@
 import * as React from "react";
 
+import { getReferrer } from "$app/data/user_action_event";
 import { formatOrderOfMagnitude } from "$app/utils/formatOrderOfMagnitude";
 
 import { Button } from "$app/components/Button";
@@ -28,7 +29,7 @@ export const CrossSellModal = ({
     ...crossSell.offered_product,
     quantity: crossSell.offered_product.quantity || 1,
     url_parameters: {},
-    referrer: "",
+    referrer: getReferrer(),
     recommender_model_name: null,
     accepted_offer: crossSell.discount ? { id: crossSell.id, discount: crossSell.discount } : null,
   };
