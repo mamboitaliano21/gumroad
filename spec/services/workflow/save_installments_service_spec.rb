@@ -331,6 +331,22 @@ describe Workflow::SaveInstallmentsService do
       )
     end
 
+    it "handles installments passed as ActionController::Parameters (hash-like)" do
+      installment = create(:installment, workflow:, name: "Installment 1", message: "Message 1")
+      hash_params = ActionController::Parameters.new(
+        "0" => { id: installment.external_id, name: "Updated name", message: "Updated message", time_duration: 1, time_period: "hour", send_preview_email: false, files: [] }
+      )
+      params[:installments] = hash_params
+
+      service = described_class.new(seller:, params:, workflow:, preview_email_recipient:)
+      success, errors = service.process
+
+      expect(success).to be(true)
+      expect(errors).to be_nil
+      expect(installment.reload.name).to eq("Updated name")
+      expect(installment.message).to eq("Updated message")
+    end
+
     it "does not save installments if there are errors" do
       params[:installments] = [default_installment_params.merge(id: SecureRandom.uuid, message: "")]
       service = described_class.new(seller:, params:, workflow:, preview_email_recipient:)

@@ -21,7 +21,9 @@ class Workflow::SaveInstallmentsService
       return [false, errors]
     end
 
-    if workflow.abandoned_cart_type? && params[:installments].size != 1
+    @installments_array = params[:installments].is_a?(ActionController::Parameters) ? params[:installments].values : Array(params[:installments])
+
+    if workflow.abandoned_cart_type? && @installments_array.size != 1
       workflow.errors.add(:base, "An abandoned cart workflow can only have one email.")
       @errors = workflow.errors
       return [false, errors]
@@ -35,7 +37,7 @@ class Workflow::SaveInstallmentsService
 
         delete_removed_installments
 
-        params[:installments].each do |installment_params|
+        @installments_array.each do |installment_params|
           installment = workflow.installments.alive.find_by_external_id(installment_params[:id]) || workflow.installments.build
           installment.name = installment_params[:name]
           installment.message = installment_params[:message]
@@ -73,7 +75,7 @@ class Workflow::SaveInstallmentsService
     attr_reader :params, :seller, :workflow, :preview_email_recipient
 
     def delete_removed_installments
-      deleted_external_ids = workflow.installments.alive.map(&:external_id) - params[:installments].pluck(:id)
+      deleted_external_ids = workflow.installments.alive.map(&:external_id) - @installments_array.map { |i| i[:id] }
       workflow.installments.by_external_ids(deleted_external_ids).find_each do |installment|
         installment.mark_deleted!
         installment.installment_rule&.mark_deleted!
