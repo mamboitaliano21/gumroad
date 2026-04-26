@@ -4465,6 +4465,8 @@ describe LinksController, :vcr, inertia: true do
             allow(product).to receive(:reviews_count).and_call_original
           end
           Link.__elasticsearch__.refresh_index!
+          # Allow ES to fully propagate the refreshed index
+          sleep 0.5
         end
 
         it "finds all matches if exact match not specified" do
