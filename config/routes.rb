@@ -1182,5 +1182,11 @@ Rails.application.routes.draw do
     end
   end
 
+  if Rails.env.test?
+    namespace :test_support do
+      post "stripe/create_payment_method", to: "stripe#create_payment_method"
+    end
+  end
+
   get "/(*path)", to: "application#e404_page" unless Rails.env.development?
 end
