@@ -50,6 +50,51 @@ RSpec.describe ContentModeration::ContentExtractor do
     end
   end
 
+  describe "#extract_from_product when URLs are nil" do
+    let(:extractor) { described_class.new }
+    let(:product) do
+      create(
+        :product,
+        name: "Nil URL Product",
+        description: '<p>Description</p><img src="https://cdn.example.com/description.png">'
+      )
+    end
+    let(:rich_content) do
+      build(
+        :product_rich_content,
+        entity: product,
+        description: [
+          { "type" => "image", "attrs" => { "src" => "https://cdn.example.com/rich-content.png" } }
+        ]
+      )
+    end
+
+    before do
+      cover_relation = double("cover_relation")
+      allow(product).to receive(:display_asset_previews).and_return(cover_relation)
+      allow(cover_relation).to receive(:joins).and_return(cover_relation)
+      allow(cover_relation).to receive(:where).and_return(cover_relation)
+      allow(cover_relation).to receive(:map).and_return([nil, "https://cdn.example.com/cover.png"])
+      allow(product).to receive(:thumbnail).and_return(double(present?: true, url: nil))
+      allow(product).to receive(:alive_rich_contents).and_return([rich_content])
+      allow(rich_content).to receive(:embedded_product_file_ids_in_order).and_return([123])
+      allow(ProductFile).to receive(:where)
+        .with(id: [123], filegroup: "image")
+        .and_return([double(s3_key: nil, s3_filename: nil)])
+      allow(extractor).to receive(:signed_download_url_for_s3_key_and_filename)
+        .and_return(nil)
+    end
+
+    it "filters out nil values without raising NoMethodError" do
+      result = extractor.extract_from_product(product)
+
+      expect(result.image_urls).not_to include(nil)
+      expect(result.image_urls).to include("https://cdn.example.com/cover.png")
+      expect(result.image_urls).to include("https://cdn.example.com/description.png")
+      expect(result.image_urls).to include("https://cdn.example.com/rich-content.png")
+    end
+  end
+
   describe "#extract_from_post" do
     let(:extractor) { described_class.new }
     let(:post) do
