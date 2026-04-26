@@ -95,6 +95,7 @@ RSpec.shared_context "with switching account to user with given role for seller"
     login_as user_with_role_for_seller
     visit(options[:host] ? settings_main_url(host: options[:host]) : settings_main_path)
     within "nav[aria-label='Main']" do
+      expect(page).to have_text(user_with_role_for_seller.name)
       select_disclosure(user_with_role_for_seller.name) do
         choose(seller.display_name)
       end

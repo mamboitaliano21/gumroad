@@ -90,7 +90,7 @@ describe "Embed scenario", type: :system, js: true, mock_easypost: true do
       visit(create_embed_page(product, url: "#{product.long_url}/#{offer_code.code}", outbound: false))
 
       within_frame do
-        expect(page).to have_status(text: "$1 off will be applied at checkout (Code SXSW)")
+        expect(page).to have_selector("[role='status']", text: "$1 off will be applied at checkout (Code SXSW)")
         click_on "Add to cart"
       end
 
