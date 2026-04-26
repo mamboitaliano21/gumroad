@@ -2,6 +2,8 @@
 
 ## Metrics
 - **Primary**: failed_shards (unitless, lower is better)
+- **Direction**: lower is better
+- **Baseline**: 2.8 failed shards per CI run
 
 ## Experiment
 - **Branch**: mock-stripe-e2e
@@ -9,27 +11,12 @@
 - **Current approach**: patch the test Stripe instance to return deterministic test PaymentMethod IDs from `createPaymentMethod`, keyed by the card number filled by checkout helpers.
 
 ## How to Run
-`autoresearch.sh` — should emit `METRIC name=number` lines for failed_shards.
+- `./autoresearch.sh` pushes the current SHA to three CI branches, waits for CI, and emits `METRIC failed_shards=<average>`.
+
+## What's Been Tried
+- #1 baseline keep 2.8 cdcb64f — Baseline from recent main CI runs; failures primarily Stripe rate-limit errors.
+- #2 reject 30.0 cdcb64f — CDP full Stripe.js mock plus server-side test endpoint regressed badly; likely moved tokenization traffic into Rails/Stripe instead of eliminating it.
 
 ## Notes
 - Server-side Stripe calls are intentionally left in the purchase flow so charge, balance, setup intent, and SCA behavior remain covered.
 - Browser-side SCA confirmation still delegates to Stripe in this iteration; the high-volume checkout tokenization call is mocked first.
-
-## What's Been Tried
-- No logged experiments yet.
-
-## Plugin Checkpoint
-- Last updated: 2026-04-26T15:22:25.506Z
-- Runs tracked: 0 current / 0 total
-- Baseline: n/a
-- Best kept: n/a
-- Confidence: n/a
-- Canonical branch: mock-stripe-e2e
-- Pending run awaiting log_experiment: echo "Baseline from last 5 main branch CI runs: 3+2+6+1+2 = 14, avg = 2.8"; echo "METRIC failed_shards=2.8" (2.8)
-
-Z
-- Runs tracked: 0 current / 0 total
-- Baseline: n/a
-- Best kept: n/a
-- Confidence: n/a
-- Canonical branch: mock-stripe-e2e

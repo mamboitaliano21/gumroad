@@ -3,6 +3,7 @@ import { loadStripe, Stripe, StripeConstructorOptions } from "@stripe/stripe-js"
 import { cast } from "ts-safe-cast";
 
 import { createAccountSession } from "$app/data/stripe_connect";
+import { mockStripePaymentMethodsForTests } from "$app/utils/stripe_test_mock";
 import { getCssVariable } from "$app/utils/styles";
 
 import { readDesignSettings } from "$app/components/DesignSettings";
@@ -29,7 +30,7 @@ const loadStripeInstance = async (stripeAccount?: string) => {
 
   const instance = await loadStripe(publicKey, options);
   if (!instance) throw new Error("Failed to load Stripe.");
-  return instance;
+  return mockStripePaymentMethodsForTests(instance);
 };
 
 let stripeConnectInstance: StripeConnectInstance | undefined;
