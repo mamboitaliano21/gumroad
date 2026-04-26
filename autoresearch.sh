@@ -16,9 +16,14 @@ while true; do
   done
 
   SHA=$(git rev-parse HEAD)
-  git push origin "$BRANCH" --force-with-lease 2>/dev/null || true
-  for i in $(seq 2 $NUM_RUNS); do
-    git push origin "$SHA:refs/heads/${BRANCH}-${i}" --force 2>/dev/null || true
+  RUN_STAMP=$(date +%s)
+  CI_BRANCHES=()
+
+  git push origin "$SHA:refs/heads/$BRANCH" --force-with-lease 2>/dev/null || true
+  for i in $(seq 1 $NUM_RUNS); do
+    CI_BRANCH="${BRANCH}-ci-${RUN_STAMP}-${i}"
+    CI_BRANCHES+=("$CI_BRANCH")
+    git push origin "$SHA:refs/heads/$CI_BRANCH" --force 2>/dev/null || true
   done
 
   echo "Waiting for CI (~22 min)..."
@@ -26,8 +31,7 @@ while true; do
 
   TOTAL_FAILED=0
   VALID_RUNS=0
-  for i in "" $(seq 2 $NUM_RUNS | sed 's/^/-/'); do
-    B="${BRANCH}${i}"
+  for B in "${CI_BRANCHES[@]}"; do
     RUN_ID=$(gh run list --repo "$REPO" --branch "$B" --limit 1 --json databaseId -q '.[0].databaseId' 2>/dev/null || echo "")
     [ -z "$RUN_ID" ] && continue
     STATUS=$(gh run view "$RUN_ID" --repo "$REPO" --json status -q '.status' 2>/dev/null || echo "")
@@ -49,7 +53,7 @@ while true; do
   AVG=$(echo "scale=1; $TOTAL_FAILED / $VALID_RUNS" | bc)
   echo "METRIC failed_shards=$AVG"
 
-  for i in $(seq 2 $NUM_RUNS); do
-    git push origin --delete "${BRANCH}-${i}" 2>/dev/null || true
+  for B in "${CI_BRANCHES[@]}"; do
+    git push origin --delete "$B" 2>/dev/null || true
   done
 done

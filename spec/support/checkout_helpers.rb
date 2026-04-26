@@ -193,27 +193,22 @@ module CheckoutHelpers
 end
 
 def fill_in_credit_card(number: "4242424242424242", expiry: StripePaymentMethodHelper::EXPIRY_MMYY, cvc: "123", zip_code: nil)
+  page.execute_script("window.__gumroadStripeTestCard = { number: arguments[0].replace(/\\D/g, ''), zipCode: arguments[1] }", number.to_s, zip_code)
+
   within_fieldset "Card information" do
-    if page.has_selector?("[data-stripe-mock]", wait: 2)
-      fill_in "Card number", with: number if number.present?
-      fill_in "MM / YY", with: expiry if expiry.present?
-      fill_in "CVC", with: cvc if cvc.present?
-      fill_in "ZIP", with: zip_code if zip_code.present?
-    else
-      within_frame do
-        fill_in "Card number", with: number, visible: false if number.present?
-        fill_in "MM / YY", with: expiry, visible: false if expiry.present?
-        fill_in "CVC", with: cvc, visible: false if cvc.present?
-        fill_in "ZIP", with: zip_code, visible: false if zip_code.present?
-      end
+    within_frame do
+      fill_in "Card number", with: number, visible: false if number.present?
+      fill_in "MM / YY", with: expiry, visible: false if expiry.present?
+      fill_in "CVC", with: cvc, visible: false if cvc.present?
+      fill_in "ZIP", with: zip_code, visible: false if zip_code.present?
     end
   end
 end
 
 def within_sca_frame(&block)
-  expect(page).to have_selector("iframe[src*='three-ds-2-challenge']", wait: 240)
+  expect(page).to have_selector("iframe[src^='https://js.stripe.com/v3/three-ds-2-challenge']", wait: 240)
 
-  within_frame(page.find("[src*='three-ds-2-challenge']")) do
+  within_frame(page.find("[src^='https://js.stripe.com/v3/three-ds-2-challenge']")) do
     within_frame("challengeFrame", &block)
   end
 end
