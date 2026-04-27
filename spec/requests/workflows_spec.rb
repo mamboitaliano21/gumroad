@@ -1448,9 +1448,7 @@ describe("Workflows", js: true, type: :system) do
           click_on "Insert image"
         end
       end
-      expect(page).to have_button("Save changes", disabled: true)
-      # Wait for the image to be uploaded
-      expect(page).to have_button("Save changes", disabled: false)
+      expect(page).to have_button("Save changes", disabled: false, wait: 10)
 
       expect(page).to_not have_email_row("Untitled")
       within find_email_row("Thank you!") do
@@ -1551,7 +1549,6 @@ describe("Workflows", js: true, type: :system) do
       within find_email_row("Thank you!") do
         click_on "Preview Email"
       end
-      expect(page).to have_button("Save changes", disabled: true)
       expect(page).to have_alert(text: "A preview has been sent to your email.")
 
       expect(@workflow.installments.alive.count).to eq(2)

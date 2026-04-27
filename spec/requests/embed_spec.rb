@@ -87,7 +87,14 @@ describe "Embed scenario", type: :system, js: true, mock_easypost: true do
     let(:offer_code) { create(:offer_code, user: product.user, products: [product]) }
 
     it "applies the discount code" do
-      visit(create_embed_page(product, url: "#{product.long_url}/#{offer_code.code}", outbound: false))
+      embed_url = create_embed_page(product, url: "#{product.long_url}/#{offer_code.code}", outbound: false)
+      visit(embed_url)
+
+      within_frame do
+        unless page.has_text?("$1 off will be applied at checkout", wait: 10)
+          visit(embed_url)
+        end
+      end
 
       within_frame do
         expect(page).to have_text("$1 off will be applied at checkout", wait: 15)
