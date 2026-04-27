@@ -47,13 +47,30 @@ Only `*_spec.rb` files. Key flaky tests identified from recent CI failures:
 - Common flaky test patterns to fix: missing Capybara waits, non-deterministic DB ordering, race conditions in async operations, time-dependent assertions
 
 ## What's Been Tried
-- No logged experiments yet.
+- #1 baseline keep 0 a439acf — Baseline: 0/5 green CI runs (16 total job failures). First batch of fixes: membership price updates ordering (tier param), embed spec timing (wait:10), admin alert timing, download page posts wait, reviews ordering. Mixed results - embed specs still flaking.
 
 ## What's Been Tried
 - No logged experiments yet.
 
 ## Plugin Checkpoint
-- Last updated: 2026-04-27T19:53:44.053Z
+- Last updated: 2026-04-27T20:19:35.157Z
+- Runs tracked: 1 current / 1 total
+- Baseline: 0
+- Best kept: n/a
+- Confidence: n/a
+- Canonical branch: autoresearch/ci-speedup-2026-04-27
+- Last logged run: #1 keep a439acf — Baseline: 0/5 green CI runs (16 total job failures). First batch of fixes: membership price updates ordering (tier param), embed spec timing (wait:10), admin alert timing, download page posts wait, reviews ordering. Mixed results - embed specs still flaking.
+- Pending run awaiting log_experiment: ./autoresearch.sh (0)
+
+Z
+- Runs tracked: 1 current / 1 total
+- Baseline: 0
+- Best kept: n/a
+- Confidence: n/a
+- Canonical branch: autoresearch/ci-speedup-2026-04-27
+- Last logged run: #1 keep a439acf — Baseline: 0/5 green CI runs (16 total job failures). First batch of fixes: membership price updates ordering (tier param), embed spec timing (wait:10), admin alert timing, download page posts wait, reviews ordering. Mixed results - embed specs still flaking.
+
+Z
 - Runs tracked: 0 current / 0 total
 - Baseline: n/a
 - Best kept: n/a
