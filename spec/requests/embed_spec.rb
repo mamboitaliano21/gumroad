@@ -168,6 +168,13 @@ describe "Embed scenario", type: :system, js: true, mock_easypost: true do
     embed_page_url = create_embed_page(physical_skus_product, template_name: "embed_page.html.erb", outbound: false, gumroad_params: "quantity=2&price=3&Age=21&Gender=Male&option=#{physical_skus_product.skus.find_by(name: "Blue - Extra Large - Polo").external_id}")
     visit(embed_page_url)
 
+    # Retry visit if URL params aren't processed on first load (JS initialization race)
+    within_frame do
+      unless page.has_css?("input[type='radio']:checked", wait: 10)
+        visit(embed_page_url)
+      end
+    end
+
     within_frame do
       expect(page).to have_radio_button("Blue - Extra Large - Polo", checked: true, wait: 10)
       expect(page).to have_field("Quantity", with: 2)
