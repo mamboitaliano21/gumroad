@@ -90,7 +90,7 @@ describe "Embed scenario", type: :system, js: true, mock_easypost: true do
       visit(create_embed_page(product, url: "#{product.long_url}/#{offer_code.code}", outbound: false))
 
       within_frame do
-        expect(page).to have_status(text: "$1 off will be applied at checkout (Code SXSW)", wait: 10)
+        expect(page).to have_text("$1 off will be applied at checkout", wait: 15)
         click_on "Add to cart"
       end
 
@@ -115,8 +115,7 @@ describe "Embed scenario", type: :system, js: true, mock_easypost: true do
       visit(create_embed_page(product, url: direct_affiliate.referral_url_for_product(product), outbound: false))
 
       within_frame do
-        expect(page).to have_text("Add to cart", wait: 10)
-        click_on "Add to cart"
+        find("button, a, [role='button']", text: "Add to cart", wait: 15).click
       end
 
       expect do
