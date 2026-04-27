@@ -78,25 +78,19 @@ describe "Embed scenario", type: :system, js: true, mock_easypost: true do
 
     visit(create_embed_page(product, insert_anchor_tag: false, outbound: false))
 
-    within_frame(find("iframe")) { click_on "Add to cart" }
+    within_frame { click_on "Add to cart" }
 
     check_out(product)
   end
 
   context "discount code in URL" do
-    # Use a non-physical product to avoid shipping address / surcharge interactions
-    let(:product) { create(:product) }
-    let!(:offer_code) { create(:offer_code, user: product.user, products: [product]) }
+    let(:offer_code) { create(:offer_code, user: product.user, products: [product]) }
 
     it "applies the discount code" do
-      # Verify the offer code is findable (catches DB visibility issues early)
-      expect(product.reload.find_offer_code(code: offer_code.code)).to be_present
-
       visit(create_embed_page(product, url: "#{product.long_url}/#{offer_code.code}", outbound: false))
 
-      within_frame(find("iframe")) do
-        # Wait for the discount code banner to appear in the embed (confirms offer code is recognized)
-        expect(page).to have_selector("[role='status']", text: /off will be applied/i, wait: 15)
+      within_frame do
+        expect(page).to have_status(text: "$1 off will be applied at checkout (Code SXSW)")
         click_on "Add to cart"
       end
 
