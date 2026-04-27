@@ -99,8 +99,9 @@ RSpec.shared_context "with switching account to user with given role for seller"
       toggle_disclosure(user_with_role_for_seller.name, expand: true)
     end
     # Disclosure content may be portaled outside the nav; choose at page level.
-    # Use find first to ensure the portal has rendered before choosing.
-    page.find(:radio_button, seller.display_name, wait: 10).choose
+    # Wait for the portal radio button to render before choosing.
+    expect(page).to have_selector(:radio_button, seller.display_name, wait: 10)
+    choose(seller.display_name)
 
     wait_for_ajax
     visit(options[:host] ? settings_main_url(host: options[:host]) : settings_main_path)
