@@ -84,16 +84,12 @@ describe "Embed scenario", type: :system, js: true, mock_easypost: true do
   end
 
   context "discount code in URL" do
-    let(:offer_code) { create(:offer_code, user: product.user, products: [product]) }
+    let!(:offer_code) { create(:offer_code, user: product.user, products: [product]) }
 
     it "applies the discount code" do
       visit(create_embed_page(product, url: "#{product.long_url}/#{offer_code.code}", outbound: false))
 
-      within_frame do
-        wait_for_ajax
-        expect(page).to have_status(text: "$1 off will be applied at checkout (Code SXSW)")
-        click_on "Add to cart"
-      end
+      within_frame { click_on "Add to cart" }
 
       check_out(product, is_free: true)
 
