@@ -37,7 +37,7 @@ class Link < ApplicationRecord
             28 => :is_collab,
             29 => :is_unpublished_by_admin,
             30 => :community_chat_enabled,
-            31 => :DEPRECATED_excluded_from_mobile_app_discover,
+            31 => :created_via_cli,
             32 => :DEPRECATED_moderated_by_iffy,
             33 => :hide_sold_out_variants,
             :column => "flags",
@@ -48,7 +48,7 @@ class Link < ApplicationRecord
           Product::Validations, Product::Caching, Product::NativeTypeTemplates, Product::Recommendations,
           Product::Prices, Product::Shipping, Product::Searchable, Product::Tags, Product::Taxonomies,
           Product::ReviewStat, Product::Utils, Product::StructuredData, ActionView::Helpers::SanitizeHelper,
-          ActionView::Helpers::NumberHelper, Mongoable, TimestampScopes, ExternalId,
+          ActionView::Helpers::NumberHelper, TimestampScopes, ExternalId,
           WithFileProperties, JsonData, Deletable, WithProductFiles, WithCdnUrl, MaxPurchaseCount,
           Integrations, Product::StaffPicked, RichContents, Product::Sorting, Product::CreationLimit
 
@@ -205,7 +205,7 @@ class Link < ApplicationRecord
   validate :published_bundle_must_have_at_least_one_product, on: :update
   validate :user_is_eligible_for_service_products, on: :create, if: :is_service?
   validate :commission_price_is_valid, if: -> { native_type == Link::NATIVE_TYPE_COMMISSION }
-  validate :one_coffee_per_user, on: :create, if: -> { native_type == Link::NATIVE_TYPE_COFFEE }
+  validate :one_coffee_per_user, if: -> { native_type == Link::NATIVE_TYPE_COFFEE && (new_record? || (archived_changed? && !archived?)) }
   validate :quantity_enabled_state_is_allowed
   validate :default_offer_code_must_be_valid
   validate :content_moderation_check, if: -> { publishing? || (persisted? && published? && (name_changed? || description_changed?)) }

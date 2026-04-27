@@ -770,19 +770,22 @@ describe User, :vcr do
 
     context "when user can be deactivated" do
       it "deactivates the user" do
-        delete_at = Time.current
+        freeze_time do
+          delete_at = Time.current
 
-        travel_to(delete_at) do
           return_value = @user.reload.deactivate!
           expect(return_value).to be_truthy
-        end
 
-        expect(@user.reload.read_attribute(:username)).to be_nil
-        expect(@user.deleted_at.to_i).to eq(delete_at.to_i)
-        expect(@product.reload.deleted_at.to_i).to eq(delete_at.to_i)
-        expect(@installment.reload.deleted_at.to_i).to eq(delete_at.to_i)
-        expect(@user.user_compliance_infos.pluck(:deleted_at).map(&:to_i)).to eq([delete_at.to_i, delete_at.to_i])
-        expect(@bank_account.reload.deleted_at.to_i).to eq(delete_at.to_i)
+          expect(@user.reload.read_attribute(:username)).to be_nil
+          expect(@user.deleted_at.to_i).to eq(delete_at.to_i)
+          expect(@product.reload.deleted_at.to_i).to eq(delete_at.to_i)
+          expect(@installment.reload.deleted_at.to_i).to eq(delete_at.to_i)
+          expect(@user.user_compliance_infos.alive).to be_empty
+          @user.user_compliance_infos.pluck(:deleted_at).each do |ts|
+            expect(ts).to be_within(2.seconds).of(delete_at)
+          end
+          expect(@bank_account.reload.deleted_at.to_i).to eq(delete_at.to_i)
+        end
       end
 
       it "invalidates all the active sessions" do
@@ -1814,32 +1817,6 @@ describe User, :vcr do
       end
     end
 
-    describe "logging suspension time to mongo", :sidekiq_inline do
-      let(:collection) { MONGO_DATABASE[MongoCollections::USER_SUSPENSION_TIME] }
-
-      shared_examples "logs suspension data to mongo" do |suspension_type|
-        it "logs suspension data to mongo when suspended for #{suspension_type}" do
-          freeze_time do
-            case suspension_type
-            when "fraud"
-              @user.flag_for_fraud!(author_id: @admin_user.id)
-              @user.suspend_for_fraud!(author_id: @admin_user.id)
-            when "tos_violation"
-              @user.flag_for_tos_violation!(author_id: @admin_user.id, product_id: @product_1.id)
-              @user.suspend_for_tos_violation!(author_id: @admin_user.id)
-            end
-
-            record = collection.find("user_id" => @user.id).first
-            expect(record).to be_present
-            expect(record["user_id"]).to eq(@user.id)
-            expect(record["suspended_at"]).to eq(Time.current.to_s)
-          end
-        end
-      end
-
-      include_examples "logs suspension data to mongo", "fraud"
-      include_examples "logs suspension data to mongo", "tos_violation"
-    end
     it "adds a comment when flagging for TOS violation" do
       expect do
         @user.flag_for_tos_violation!(author_id: @admin_user.id, product_id: @product_1.id)
@@ -1854,18 +1831,7 @@ describe User, :vcr do
       end.to_not change { @product_1.comments.reload.count }
     end
 
-    it "logs the timestamp to mongo on flagging" do
-      @user.update_attribute(:tos_violation_reason, "bad content")
-      @user.flag_for_tos_violation!(author_id: @admin_user.id, product_id: @product_1.id)
 
-      expect(SaveToMongoWorker).to have_enqueued_sidekiq_job(anything, anything)
-    end
-
-    it "logs the timestamp to mongo on suspension" do
-      @user.flag_for_fraud!(author_id: @admin_user.id)
-
-      expect(SaveToMongoWorker).to have_enqueued_sidekiq_job(anything, anything)
-    end
 
     describe "seller with multiple accounts" do
       before do

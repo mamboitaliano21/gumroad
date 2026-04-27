@@ -4,7 +4,7 @@ class Purchase < ApplicationRecord
   has_paper_trail
 
   include Rails.application.routes.url_helpers
-  include ActionView::Helpers::DateHelper, CurrencyHelper, ProductsHelper, Mongoable, PurchaseErrorCode,
+  include ActionView::Helpers::DateHelper, CurrencyHelper, ProductsHelper, PurchaseErrorCode,
           ExternalId, JsonData, TimestampScopes, Accounting, Blockable, CardCountrySource, Targeting,
           Refundable, Reviews, PingNotification, Searchable, Risk,
           CreatorAnalyticsCallbacks, FlagShihTzu, AfterCommitEverywhere, CompletionHandler, Integrations,
@@ -225,8 +225,7 @@ class Purchase < ApplicationRecord
     after_transition any => :failed, :do => :ban_buyer_on_fraud_related_error_code!
     after_transition any => :failed, :do => :suspend_buyer_on_fraudulent_card_decline!
     after_transition any => :failed, :do => :send_failure_email
-    after_transition any => %i[failed successful not_charged], :do => :check_purchase_heuristics
-    after_transition any => %i[failed successful not_charged], :do => :score_product
+
     after_transition any => %i[preorder_authorization_successful successful not_charged preorder_concluded_unsuccessfully], :do => :queue_product_cache_invalidation
     after_transition any => %i[successful preorder_authorization_successful], :do => :touch_variants_if_limited_quantity, unless: lambda { |purchase|
       purchase.not_charged_and_not_free_trial?
@@ -348,7 +347,6 @@ class Purchase < ApplicationRecord
   before_create :toggle_off_can_contact_if_buyer_has_unsubscribed
 
   before_save :assign_default_rental_expired
-  before_save :to_mongo
   before_save :truncate_referrer
 
   after_commit :attach_credit_card_to_purchaser,
@@ -900,6 +898,32 @@ class Purchase < ApplicationRecord
 
   def purchase_info
     self.class.purchase_info(url_redirect, link, self).merge!(variants_displayable: variants_list)
+  end
+
+  # Fails line items in a cart that individually pass `validate_offer_code` but
+  # collectively exceed the same offer code's `max_purchase_count`. Single-line carts
+  # are skipped because `before_create :validate_offer_code` already handles them.
+  # Returns the array of purchases it marked failed so the caller can route error
+  # responses for them through `Order::ChargeService#ensure_all_purchases_processed`.
+  def self.validate_offer_code_usage_across_line_items(purchases)
+    rejected = []
+    purchases
+      .select { |p| p.offer_code_id && p.in_progress? && p.errors.empty? }
+      .group_by(&:offer_code_id)
+      .each do |_, code_purchases|
+        next if code_purchases.size < 2
+        offer_code = code_purchases.first.offer_code
+        next if offer_code&.max_purchase_count.nil?
+        next if code_purchases.sum(&:quantity) <= offer_code.quantity_left
+
+        code_purchases.each do |purchase|
+          purchase.error_code = PurchaseErrorCode::EXCEEDING_OFFER_CODE_QUANTITY
+          Purchase::MarkFailedService.new(purchase).perform
+          purchase.errors.add(:base, "Sorry, the discount code you are using is invalid for the quantity you have selected.")
+          rejected << purchase
+        end
+      end
+    rejected
   end
 
   def self.purchase_response(url_redirect, link, purchase = nil)
@@ -3647,13 +3671,7 @@ class Purchase < ApplicationRecord
       PostToPingEndpointsWorker.perform_in(5.seconds, id, url_parameters, ResourceSubscription::REFUNDED_RESOURCE_NAME)
     end
 
-    def score_product
-      ScoreProductWorker.perform_in(5.seconds, link.id) if run_risk_checks?
-    end
 
-    def check_purchase_heuristics
-      CheckPurchaseHeuristicsWorker.perform_in(5.seconds, id) if run_risk_checks?
-    end
 
     def log_transition
       logger.info "Purchase: purchase ID #{id} transitioned to #{purchase_state}"
@@ -3772,10 +3790,6 @@ class Purchase < ApplicationRecord
     def downcase_email
       return if email.blank?
       self.email = email.downcase
-    end
-
-    def run_risk_checks?
-      price_cents > 0 && !not_charged? && charged_using_gumroad_merchant_account?
     end
 
     def all_workflows
