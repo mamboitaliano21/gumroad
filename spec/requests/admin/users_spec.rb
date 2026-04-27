@@ -96,10 +96,12 @@ describe "Admin::UsersController Scenario", type: :system, js: true do
       end
     end
 
-    def submit_custom_fee
+    def submit_custom_fee_form
+      # Stub window.confirm to auto-accept, then click the specific submit button
       page.execute_script("window.__origConfirm = window.confirm; window.confirm = function() { return true; }")
       find("#update-custom-fee").click
-      wait_for_ajax
+      # Wait for the success alert to confirm the request completed
+      expect(page).to have_alert(text: "Custom fee updated.", wait: 10)
       page.execute_script("if (window.__origConfirm) window.confirm = window.__origConfirm")
     end
 
@@ -109,7 +111,7 @@ describe "Admin::UsersController Scenario", type: :system, js: true do
       visit admin_user_path(user.external_id)
       find_and_click "h3", text: "Custom fee"
       fill_in "custom_fee_percent", with: "2.5"
-      submit_custom_fee
+      submit_custom_fee_form
 
       expect(user.reload.custom_fee_per_thousand).to eq(25)
     end
@@ -121,7 +123,7 @@ describe "Admin::UsersController Scenario", type: :system, js: true do
       visit admin_user_path(user.external_id)
       find_and_click "h3", text: "Custom fee"
       fill_in "custom_fee_percent", with: "2.5"
-      submit_custom_fee
+      submit_custom_fee_form
 
       expect(user.reload.custom_fee_per_thousand).to eq(25)
     end
@@ -133,7 +135,7 @@ describe "Admin::UsersController Scenario", type: :system, js: true do
       visit admin_user_path(user.external_id)
       find_and_click "h3", text: "Custom fee"
       fill_in "custom_fee_percent", with: ""
-      submit_custom_fee
+      submit_custom_fee_form
 
       expect(user.reload.custom_fee_per_thousand).to be_nil
     end
