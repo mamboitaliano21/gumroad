@@ -1,102 +1,77 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Autoresearch benchmark: trigger CI on GitHub, wait for completion, report duration
-# Usage: ./autoresearch.sh [num_runs]  (default: 1)
+# Autoresearch benchmark: push branch, run 5 sequential CI runs, count green results
 REPO="antiwork/gumroad"
 BRANCH="autoresearch/ci-speedup-2026-04-27"
-NUM_RUNS="${1:-1}"
+NUM_RUNS=5
 POLL_INTERVAL=30
 
-log() { echo "[autoresearch] $(date '+%H:%M:%S') $*"; }
+log() { echo "[bench] $(date '+%H:%M:%S') $*" >&2; }
 
-# Push current branch state
-log "Pushing branch $BRANCH..."
-git push origin "$BRANCH" 2>&1 || git push origin "$BRANCH" --force-with-lease 2>&1
-
-# Wait for the push-triggered run to appear
-log "Waiting for CI run to appear..."
-sleep 15
-
-RUN_ID=""
-for attempt in $(seq 1 10); do
-  RUN_ID=$(gh run list --repo "$REPO" --branch "$BRANCH" --workflow tests.yml --limit 1 --json databaseId,status --jq '.[0].databaseId // empty')
-  if [[ -n "$RUN_ID" ]]; then
-    break
-  fi
-  log "No run found yet, retrying ($attempt/10)..."
-  sleep 10
-done
-
-if [[ -z "$RUN_ID" ]]; then
-  log "ERROR: No CI run found after push"
+# Pre-check: ensure we're on the right branch
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+if [[ "$current_branch" != "$BRANCH" ]]; then
+  echo "ERROR: expected branch $BRANCH, got $current_branch" >&2
   exit 1
 fi
 
-durations=()
-pass_count=0
-slowest_shard=0
+# Push current state
+log "Pushing $BRANCH..."
+git push origin "$BRANCH" 2>&1 >&2 || true
 
-run_and_measure() {
-  local run_id=$1
-  local run_num=$2
+green=0
+total_failures=0
 
-  log "Run $run_num/$NUM_RUNS: waiting for run $run_id..."
+for i in $(seq 1 "$NUM_RUNS"); do
+  if [[ $i -gt 1 ]]; then
+    log "Pushing empty commit for run $i..."
+    git commit --allow-empty -m "ci: autoresearch run $i" >/dev/null 2>&1
+    git push origin "$BRANCH" 2>&1 >&2
+  fi
 
+  # Wait for run to appear
+  sleep 20
+  run_id=""
+  for attempt in $(seq 1 12); do
+    run_id=$(gh api "/repos/$REPO/actions/runs?per_page=5" \
+      --jq "[.workflow_runs[] | select(.head_branch == \"$BRANCH\" and .name == \"Tests\" and .status != \"completed\")] | .[0].id // empty" 2>/dev/null)
+    if [[ -n "$run_id" ]]; then break; fi
+    sleep 10
+  done
+
+  if [[ -z "$run_id" ]]; then
+    # Maybe it already completed very fast, grab the latest
+    run_id=$(gh api "/repos/$REPO/actions/runs?per_page=3" \
+      --jq "[.workflow_runs[] | select(.head_branch == \"$BRANCH\" and .name == \"Tests\")] | .[0].id // empty" 2>/dev/null)
+  fi
+
+  if [[ -z "$run_id" ]]; then
+    log "Run $i: no CI run found, counting as failure"
+    total_failures=$((total_failures + 1))
+    continue
+  fi
+
+  log "Run $i: waiting for $run_id..."
   while true; do
-    local status
-    status=$(gh run view "$run_id" --repo "$REPO" --json status --jq '.status')
-    if [[ "$status" == "completed" ]]; then
-      break
-    fi
-    log "  status: $status"
+    rs=$(gh api "/repos/$REPO/actions/runs/$run_id" --jq '.status' 2>/dev/null)
+    if [[ "$rs" == "completed" ]]; then break; fi
     sleep "$POLL_INTERVAL"
   done
 
-  local conclusion run_data start_ts end_ts start_epoch end_epoch duration_min
-  run_data=$(gh run view "$run_id" --repo "$REPO" --json conclusion,createdAt,updatedAt)
-  conclusion=$(echo "$run_data" | jq -r '.conclusion')
-  start_ts=$(echo "$run_data" | jq -r '.createdAt')
-  end_ts=$(echo "$run_data" | jq -r '.updatedAt')
-
-  start_epoch=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$start_ts" "+%s" 2>/dev/null || date -d "$start_ts" "+%s")
-  end_epoch=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$end_ts" "+%s" 2>/dev/null || date -d "$end_ts" "+%s")
-  duration_min=$(echo "scale=2; ($end_epoch - $start_epoch) / 60" | bc)
-
-  log "Run $run_num: conclusion=$conclusion duration=${duration_min}min"
-
+  conclusion=$(gh api "/repos/$REPO/actions/runs/$run_id" --jq '.conclusion' 2>/dev/null)
   if [[ "$conclusion" == "success" ]]; then
-    pass_count=$((pass_count + 1))
+    green=$((green + 1))
+    log "Run $i ($run_id): GREEN ✓"
   else
-    log "WARNING: Run $run_num failed with conclusion=$conclusion"
+    # Count individual failed jobs
+    failed_jobs=$(gh api "/repos/$REPO/actions/runs/$run_id/jobs?per_page=100&filter=latest" \
+      --jq '[.jobs[] | select(.conclusion == "failure")] | length' 2>/dev/null || echo "1")
+    total_failures=$((total_failures + failed_jobs))
+    log "Run $i ($run_id): FAILED ($failed_jobs jobs failed)"
   fi
-
-  durations+=("$duration_min")
-}
-
-# Run 1: the push-triggered run
-run_and_measure "$RUN_ID" 1
-
-# Additional runs if requested
-for i in $(seq 2 "$NUM_RUNS"); do
-  log "Triggering run $i/$NUM_RUNS via empty commit..."
-  git commit --allow-empty -m "ci: benchmark run $i"
-  git push origin "$BRANCH"
-  sleep 15
-
-  NEW_RUN_ID=$(gh run list --repo "$REPO" --branch "$BRANCH" --workflow tests.yml --limit 1 --json databaseId --jq '.[0].databaseId')
-  run_and_measure "$NEW_RUN_ID" "$i"
 done
 
-# Calculate average duration
-total=0
-for d in "${durations[@]}"; do
-  total=$(echo "$total + $d" | bc)
-done
-avg=$(echo "scale=2; $total / ${#durations[@]}" | bc)
-pass_rate=$(echo "scale=0; $pass_count * 100 / $NUM_RUNS" | bc)
-
-log "Results: avg_duration=${avg}min pass_rate=${pass_rate}%"
-
-echo "METRIC ci_duration_min=$avg"
-echo "METRIC pass_rate=$pass_rate"
+log "Results: $green/$NUM_RUNS green, $total_failures total job failures"
+echo "METRIC green_runs=$green"
+echo "METRIC total_failures=$total_failures"

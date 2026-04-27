@@ -1,49 +1,51 @@
-# Autoresearch: Optimize Gumroad CI Test Duration
+# Autoresearch: Fix Flaky CI Tests
 
 ## Objective
-Reduce the wall-clock duration of the `tests.yml` GitHub Actions CI workflow for the antiwork/gumroad repo. The workflow builds Docker images, then runs RSpec tests in parallel shards: 20 "fast" shards (non-request specs) and 65 "slow" shards (request specs). Knapsack Pro handles test distribution. The bottleneck is typically the slowest `test_slow` shard.
+Eliminate flaky tests in the antiwork/gumroad repo so that CI (tests.yml workflow) passes on the first run consistently. The benchmark is 5 consecutive green CI runs on GitHub Actions. The metric is the number of green runs out of 5. Target: 5/5.
 
-We can ONLY modify test files (`spec/**/*_spec.rb`). The goal is to make tests run faster through optimization of the specs themselves (reducing setup overhead, removing redundant work, using lighter factories, etc.) without reducing test coverage.
+The test suite has 85 parallel shards (20 fast + 65 slow) running on Ubicloud runners with Knapsack Pro distribution. Tests are RSpec: unit/model specs, controller specs, and system/request specs (Capybara with JS).
 
 ## Metrics
-- **Primary**: ci_duration_min (min, lower is better)
-- **Secondary**: pass_rate, slowest_shard_min
+- **Primary**: green_runs (count out of 5, higher is better)
+- **Secondary**: total_failures
 
 ## How to Run
-`./autoresearch.sh` — pushes branch, triggers 5 sequential CI runs on GitHub, waits for completion, outputs `METRIC name=number` lines for average duration and pass rate.
+`./autoresearch.sh` — pushes branch, triggers 5 sequential CI runs on GitHub, waits for each, counts green runs, outputs `METRIC green_runs=N` and `METRIC total_failures=N`.
 
 ## Files in Scope
-ALL test files under `spec/` — only `*_spec.rb` files may be modified. Key targets by size:
+Only `*_spec.rb` files. Key flaky tests identified from recent CI failures:
 
-**Request specs (slow shards, 65 shards):**
-- `spec/requests/settings/payments_spec.rb` (6665 lines) — largest request spec
-- `spec/requests/purchases/product/taxes_spec.rb` (4071 lines)
-- `spec/requests/customers/customers_spec.rb` (1730 lines)
-- `spec/requests/workflows_spec.rb` (1662 lines)
-- `spec/requests/products/edit/rich_text_editor_spec.rb` (1438 lines)
+**Frequent flakers (multiple failures across recent runs):**
+- `spec/sidekiq/schedule_membership_price_updates_job_spec.rb:159` — non-deterministic MySQL ordering of plan changes with identical timestamps
+- `spec/requests/embed_spec.rb:89,115,143` — Capybara timing issues in iframe-based system tests
 
-**Non-request specs (fast shards, 20 shards):**
-- `spec/business/payments/merchant_registration/stripe/stripe_merchant_account_manager_spec.rb` (11469 lines)
-- `spec/models/purchase_spec.rb` (6476 lines)
-- `spec/models/link_spec.rb` (4962 lines)
-- `spec/controllers/links_controller_spec.rb` (4550 lines)
-- `spec/models/subscription_spec.rb` (4153 lines)
+**One-off flakers (single failure each, likely timing or state):**
+- `spec/requests/products/edit/edit_spec.rb:681` — discover notices
+- `spec/requests/workflows_spec.rb:1293` — publishing workflow eligibility
+- `spec/requests/emails/edit_spec.rb:170` — editing/publishing email
+- `spec/requests/library_spec.rb:267` — listing multiple purchases
+- `spec/requests/products/index_spec.rb:169` — duplication loading state
+- `spec/requests/products/creation_spec.rb:116` — physical product creation
+- `spec/requests/affiliates_spec.rb:7` — affiliate redirect + discount
+- `spec/requests/products/edit/rich_text_editor_spec.rb:314` — external link click
+- `spec/requests/balance_pages_spec.rb:952` — suspended payout banner
+- `spec/requests/purchases/product/offer_codes_spec.rb:89` — percentage discount checkout
+- `spec/requests/products/collabs_spec.rb:184` — collabs placeholder
+- `spec/helpers/installments_helper_spec.rb:13` — post title display
+- `spec/sidekiq/sync_stuck_payouts_job_spec.rb:125` — stuck payouts sync
 
 ## Off Limits
-- **Application code** — no changes to `app/`, `lib/`, `config/`, etc.
-- **CI workflow** — no changes to `.github/workflows/`
-- **Test infrastructure** — no changes to `spec/spec_helper.rb`, `spec/rails_helper.rb`, `spec/support/` (factories, shared contexts, etc.)
-- **VCR cassettes** — no changes to `spec/support/fixtures/`
-- **Coverage cannot decrease** — all existing tests must still exist and pass
+- Application code (`app/`, `lib/`, `config/`)
+- CI workflow (`.github/workflows/`)
+- Test infrastructure (`spec/spec_helper.rb`, `spec/rails_helper.rb`, `spec/support/`)
+- VCR cassettes (`spec/support/fixtures/`)
 
 ## Constraints
-- All 5 CI runs must be green (pass) for the experiment to count
-- Test coverage must remain the same or better
+- All existing tests must still pass (no removing/skipping tests)
+- Test coverage cannot decrease
 - Only `*_spec.rb` files may be modified
 - Cannot add new gem dependencies
-- Cannot remove test cases — only optimize how they run
-- Cannot use `skip` or `:skip` tags to bypass tests
-- Knapsack Pro handles shard distribution; focus on making individual tests faster
+- Common flaky test patterns to fix: missing Capybara waits, non-deterministic DB ordering, race conditions in async operations, time-dependent assertions
 
 ## What's Been Tried
-_(Baseline pending — first run will establish this)_
+_(Will be updated by the autoresearch plugin)_
