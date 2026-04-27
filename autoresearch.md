@@ -47,13 +47,21 @@ Only `*_spec.rb` files. Key flaky tests identified from recent CI failures:
 - Common flaky test patterns to fix: missing Capybara waits, non-deterministic DB ordering, race conditions in async operations, time-dependent assertions
 
 ## What's Been Tried
-_(Will be updated by the autoresearch plugin)_
+- No logged experiments yet.
 
 ## What's Been Tried
 - No logged experiments yet.
 
 ## Plugin Checkpoint
-- Last updated: 2026-04-27T18:04:36.259Z
+- Last updated: 2026-04-27T19:53:44.053Z
+- Runs tracked: 0 current / 0 total
+- Baseline: n/a
+- Best kept: n/a
+- Confidence: n/a
+- Canonical branch: autoresearch/ci-speedup-2026-04-27
+- Pending run awaiting log_experiment: ./autoresearch.sh (0)
+
+Z
 - Runs tracked: 0 current / 0 total
 - Baseline: n/a
 - Best kept: n/a
