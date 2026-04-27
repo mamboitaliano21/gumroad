@@ -336,6 +336,32 @@ describe LinksController, :vcr, inertia: true do
         let(:response_status) { 204 }
       end
 
+      context "when ActiveRecord::Deadlocked is raised" do
+        it "retries and succeeds" do
+          call_count = 0
+          allow_any_instance_of(Link).to receive(:save!).and_wrap_original do |original, *args|
+            call_count += 1
+            raise ActiveRecord::Deadlocked if call_count == 1
+            original.call(*args)
+          end
+
+          put :update, params: @params, as: :json
+
+          expect(response).to have_http_status(:no_content)
+          expect(call_count).to eq(2)
+        end
+
+        it "returns 503 after exhausting retries" do
+          allow_any_instance_of(Link).to receive(:save!).and_raise(ActiveRecord::Deadlocked)
+          expect(ErrorNotifier).to receive(:notify).with(instance_of(ActiveRecord::Deadlocked))
+
+          put :update, params: @params, as: :json
+
+          expect(response).to have_http_status(:service_unavailable)
+          expect(response.parsed_body["error_message"]).to eq("Your changes couldn't be saved due to a temporary conflict. Please try again.")
+        end
+      end
+
       it "returns the existing validation error when suggested price is set but the default price record is missing" do
         @product.prices.destroy_all
         @product.update_column(:customizable_price, true)
