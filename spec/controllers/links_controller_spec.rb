@@ -455,6 +455,35 @@ describe LinksController, :vcr, inertia: true do
         end
       end
 
+      context "when a deadlock occurs" do
+        it "retries and succeeds" do
+          call_count = 0
+          allow(ActiveRecord::Base).to receive(:transaction).and_wrap_original do |method, **args, &block|
+            call_count += 1
+            if call_count == 1
+              raise ActiveRecord::Deadlocked.new("Deadlock found when trying to get lock; try restarting transaction")
+            end
+            method.call(**args, &block)
+          end
+
+          put :update, params: @params, as: :json
+
+          expect(response).to have_http_status(:no_content)
+          expect(call_count).to eq(2)
+        end
+
+        it "returns conflict after exhausting retries" do
+          allow(ActiveRecord::Base).to receive(:transaction).and_raise(
+            ActiveRecord::Deadlocked.new("Deadlock found when trying to get lock; try restarting transaction")
+          )
+
+          put :update, params: @params, as: :json
+
+          expect(response).to have_http_status(:conflict)
+          expect(response.parsed_body["error_message"]).to eq("Sorry, something went wrong. Please try again.")
+        end
+      end
+
       it "updates the product" do
         expect(SaveContentUpsellsService).to receive(:new).with(
           seller: @product.user,

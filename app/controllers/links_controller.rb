@@ -298,8 +298,11 @@ class LinksController < ApplicationController
     render inertia: "Products/Edit", props: presenter.edit_props
   end
 
+  DEADLOCK_MAX_RETRIES = 2
+
   def update
     authorize @product
+    deadlock_retries = 0
     begin
       ActiveRecord::Base.transaction do
         @product.assign_attributes(product_permitted_params.except(
@@ -393,6 +396,14 @@ class LinksController < ApplicationController
         toggle_community_chat!(product_permitted_params[:community_chat_enabled])
         @product.generate_product_files_archives!
       end
+    rescue ActiveRecord::Deadlocked => e
+      deadlock_retries += 1
+      if deadlock_retries <= DEADLOCK_MAX_RETRIES
+        @product.reload
+        retry
+      end
+      ErrorNotifier.notify(e)
+      return render json: { error_message: "Sorry, something went wrong. Please try again." }, status: :conflict
     rescue ActiveRecord::RecordNotSaved, ActiveRecord::RecordInvalid, Link::LinkInvalid => e
       if @product.errors.details[:custom_fields].present?
         error_message = "You must add titles to all of your inputs"
