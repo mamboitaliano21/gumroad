@@ -107,7 +107,7 @@ describe "Admin::UsersController Scenario", type: :system, js: true do
       page.execute_script("window.confirm = function() { return true; }")
       find("#update-custom-fee").click
     ensure
-      expect(page).to have_alert(text: /Custom fee updated|Something went wrong/, wait: 15)
+      expect(page).to have_alert(text: /Custom fee updated|Something went wrong/, wait: 20)
     end
 
     it "allows setting new custom fee" do

@@ -11,7 +11,7 @@ describe ReviewsPresenter do
       build_list(:product_review, 3) do |review, i|
         review.purchase.purchaser = user
         review.message = if i > 0 then "Message #{i}" else nil end
-        review.update!(rating: i + 1)
+        review.update!(rating: i + 1, created_at: (3 - i).days.ago)
         review.link.update!(user: seller)
       end
     end

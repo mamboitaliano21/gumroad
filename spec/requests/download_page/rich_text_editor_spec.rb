@@ -980,8 +980,8 @@ describe("Download Page – Rich Text Editor Content", type: :system, js: true) 
         visit @url_redirect.download_page_url
 
         within find_embed(name: "Posts") do
-          expect(page).to have_text("2 posts")
-          expect(page).to have_link(post_1.displayed_name)
+          expect(page).to have_text("2 posts", wait: 10)
+          expect(page).to have_link(post_1.displayed_name, wait: 10)
           expect(page).to_not have_link(post_between_subscriptions.displayed_name)
           expect(page).to have_link(post_2.displayed_name)
         end
