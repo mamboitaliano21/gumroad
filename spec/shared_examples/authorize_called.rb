@@ -99,9 +99,16 @@ RSpec.shared_context "with switching account to user with given role for seller"
       toggle_disclosure(user_with_role_for_seller.name, expand: true)
     end
     # Disclosure content may be portaled outside the nav; choose at page level.
-    # Wait for the portal radio button to render before choosing.
-    expect(page).to have_selector(:radio_button, seller.display_name, wait: 10)
-    choose(seller.display_name)
+    # Radix Popover re-renders after mount (for positioning), so retry on failure.
+    attempts = 0
+    begin
+      attempts += 1
+      choose(seller.display_name)
+    rescue Capybara::ElementNotFound
+      raise if attempts >= 3
+      sleep 1
+      retry
+    end
 
     wait_for_ajax
     visit(options[:host] ? settings_main_url(host: options[:host]) : settings_main_path)
