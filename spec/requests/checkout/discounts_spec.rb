@@ -888,6 +888,10 @@ describe("Checkout discounts page", type: :system, js: true) do
     before do
       create(:offer_code, user: seller, name: "Discount 4", code: "discount4", universal: true)
       stub_const("Checkout::DiscountsController::PER_PAGE", 2)
+      # Ensure deterministic ordering (default sort is updated_at DESC)
+      offer_code1.update_column(:updated_at, 1.second.from_now)
+      offer_code2.update_column(:updated_at, 1.second.ago)
+      offer_code3.update_column(:updated_at, 2.seconds.ago)
     end
 
     it "searches the offer codes" do

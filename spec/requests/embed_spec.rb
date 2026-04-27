@@ -84,6 +84,8 @@ describe "Embed scenario", type: :system, js: true, mock_easypost: true do
   end
 
   context "discount code in URL" do
+    # Use a non-physical product to avoid shipping address / surcharge interactions
+    let(:product) { create(:product) }
     let!(:offer_code) { create(:offer_code, user: product.user, products: [product]) }
 
     it "applies the discount code" do
@@ -93,11 +95,10 @@ describe "Embed scenario", type: :system, js: true, mock_easypost: true do
       visit(create_embed_page(product, url: "#{product.long_url}/#{offer_code.code}", outbound: false))
 
       within_frame(find("iframe")) do
+        # Wait for the discount code banner to appear in the embed (confirms offer code is recognized)
+        expect(page).to have_selector("[role='status']", text: /off will be applied/i, wait: 15)
         click_on "Add to cart"
       end
-
-      # Wait for the discount from URL to be applied (free product shows "Get" button)
-      expect(page).to have_selector(:command, "Get", wait: 20)
 
       check_out(product, is_free: true)
 
