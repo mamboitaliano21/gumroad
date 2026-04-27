@@ -102,8 +102,7 @@ describe "Admin::UsersController Scenario", type: :system, js: true do
       visit admin_user_path(user.external_id)
       find_and_click "h3", text: "Custom fee"
       fill_in "custom_fee_percent", with: "2.5"
-      click_on "Submit"
-      accept_browser_dialog
+      accept_confirm { click_on "Submit" }
       wait_for_ajax
 
       expect(user.reload.custom_fee_per_thousand).to eq(25)
@@ -116,8 +115,7 @@ describe "Admin::UsersController Scenario", type: :system, js: true do
       visit admin_user_path(user.external_id)
       find_and_click "h3", text: "Custom fee"
       fill_in "custom_fee_percent", with: "2.5"
-      click_on "Submit"
-      accept_browser_dialog
+      accept_confirm { click_on "Submit" }
       wait_for_ajax
 
       expect(user.reload.custom_fee_per_thousand).to eq(25)
@@ -130,8 +128,7 @@ describe "Admin::UsersController Scenario", type: :system, js: true do
       visit admin_user_path(user.external_id)
       find_and_click "h3", text: "Custom fee"
       fill_in "custom_fee_percent", with: ""
-      click_on "Submit"
-      accept_browser_dialog
+      accept_confirm { click_on "Submit" }
       wait_for_ajax
 
       expect(user.reload.custom_fee_per_thousand).to be_nil
@@ -155,8 +152,7 @@ describe "Admin::UsersController Scenario", type: :system, js: true do
         expect(user.reload.all_adult_products).to be(false)
 
         visit admin_user_path(user.external_id)
-        click_on "Mark as adult"
-        accept_browser_dialog
+        accept_confirm { click_on "Mark as adult" }
         wait_for_ajax
 
         expect(user.reload.all_adult_products).to be(true)
@@ -181,8 +177,7 @@ describe "Admin::UsersController Scenario", type: :system, js: true do
         expect(user.reload.all_adult_products).to be(true)
 
         visit admin_user_path(user.external_id)
-        click_on "Unmark as adult"
-        accept_browser_dialog
+        accept_confirm { click_on "Unmark as adult" }
         wait_for_ajax
 
         expect(user.reload.all_adult_products).to be(false)
@@ -206,8 +201,7 @@ describe "Admin::UsersController Scenario", type: :system, js: true do
 
       it "allows marking user as adult" do
         visit admin_user_path(user.external_id)
-        click_on "Mark as adult"
-        accept_browser_dialog
+        accept_confirm { click_on "Mark as adult" }
         wait_for_ajax
 
         expect(user.reload.all_adult_products).to be(true)
