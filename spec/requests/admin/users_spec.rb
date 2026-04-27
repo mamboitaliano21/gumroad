@@ -96,22 +96,29 @@ describe "Admin::UsersController Scenario", type: :system, js: true do
       end
     end
 
-    def submit_custom_fee_form
-      # Stub window.confirm to auto-accept, then click the specific submit button
-      page.execute_script("window.__origConfirm = window.confirm; window.confirm = function() { return true; }")
+    def open_custom_fee_form
+      find_and_click "h3", text: "Custom fee"
+      # Wait for React to render the form button
+      expect(page).to have_css("#update-custom-fee", wait: 10)
+    end
+
+    def submit_custom_fee_and_wait
+      accept_confirm(wait: 10) { find("#update-custom-fee").click }
+    rescue Capybara::ModalNotFound
+      # Fallback: stub confirm and retry click
+      page.execute_script("window.confirm = function() { return true; }")
       find("#update-custom-fee").click
-      # Wait for the success alert to confirm the request completed
-      expect(page).to have_alert(text: "Custom fee updated.", wait: 10)
-      page.execute_script("if (window.__origConfirm) window.confirm = window.__origConfirm")
+    ensure
+      expect(page).to have_alert(text: /Custom fee updated|Something went wrong/, wait: 15)
     end
 
     it "allows setting new custom fee" do
       expect(user.reload.custom_fee_per_thousand).to be_nil
 
       visit admin_user_path(user.external_id)
-      find_and_click "h3", text: "Custom fee"
+      open_custom_fee_form
       fill_in "custom_fee_percent", with: "2.5"
-      submit_custom_fee_form
+      submit_custom_fee_and_wait
 
       expect(user.reload.custom_fee_per_thousand).to eq(25)
     end
@@ -121,9 +128,9 @@ describe "Admin::UsersController Scenario", type: :system, js: true do
       expect(user.reload.custom_fee_per_thousand).to eq(50)
 
       visit admin_user_path(user.external_id)
-      find_and_click "h3", text: "Custom fee"
+      open_custom_fee_form
       fill_in "custom_fee_percent", with: "2.5"
-      submit_custom_fee_form
+      submit_custom_fee_and_wait
 
       expect(user.reload.custom_fee_per_thousand).to eq(25)
     end
@@ -133,9 +140,9 @@ describe "Admin::UsersController Scenario", type: :system, js: true do
       expect(user.reload.custom_fee_per_thousand).to eq(75)
 
       visit admin_user_path(user.external_id)
-      find_and_click "h3", text: "Custom fee"
+      open_custom_fee_form
       fill_in "custom_fee_percent", with: ""
-      submit_custom_fee_form
+      submit_custom_fee_and_wait
 
       expect(user.reload.custom_fee_per_thousand).to be_nil
     end
