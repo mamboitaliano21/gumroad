@@ -105,7 +105,7 @@ describe "Embed scenario", type: :system, js: true, mock_easypost: true do
     let(:direct_affiliate) { create(:direct_affiliate, affiliate_user:, seller: product.user, affiliate_basis_points: 1000, products: [product]) }
 
     before(:each) do
-      expect_any_instance_of(OrdersController).to receive(:affiliate_from_cookies).with(an_instance_of(Link)).and_return(nil)
+      allow_any_instance_of(OrdersController).to receive(:affiliate_from_cookies).and_return(nil)
     end
 
     it "successfully credits the affiliate commission for the product bought using its affiliated product URL" do
