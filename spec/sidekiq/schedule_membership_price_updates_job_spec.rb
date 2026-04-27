@@ -158,7 +158,7 @@ describe ScheduleMembershipPriceUpdatesJob do
 
           it "deletes existing plan changes for product price changes, but not user-initiated plan changes" do
             by_user = create(:subscription_plan_change, subscription: disabled_subscription, tier: enabled_tier, perceived_price_cents: new_price - 1)
-            for_price_change = create(:subscription_plan_change, subscription: disabled_subscription, for_product_price_change: true)
+            for_price_change = create(:subscription_plan_change, subscription: disabled_subscription, tier: enabled_tier, for_product_price_change: true)
 
             described_class.new.perform(enabled_tier.id)
 
