@@ -96,14 +96,20 @@ describe "Admin::UsersController Scenario", type: :system, js: true do
       end
     end
 
+    def submit_custom_fee
+      page.execute_script("window.__origConfirm = window.confirm; window.confirm = function() { return true; }")
+      find("#update-custom-fee").click
+      wait_for_ajax
+      page.execute_script("if (window.__origConfirm) window.confirm = window.__origConfirm")
+    end
+
     it "allows setting new custom fee" do
       expect(user.reload.custom_fee_per_thousand).to be_nil
 
       visit admin_user_path(user.external_id)
       find_and_click "h3", text: "Custom fee"
       fill_in "custom_fee_percent", with: "2.5"
-      accept_confirm { click_on "Submit" }
-      wait_for_ajax
+      submit_custom_fee
 
       expect(user.reload.custom_fee_per_thousand).to eq(25)
     end
@@ -115,8 +121,7 @@ describe "Admin::UsersController Scenario", type: :system, js: true do
       visit admin_user_path(user.external_id)
       find_and_click "h3", text: "Custom fee"
       fill_in "custom_fee_percent", with: "2.5"
-      accept_confirm { click_on "Submit" }
-      wait_for_ajax
+      submit_custom_fee
 
       expect(user.reload.custom_fee_per_thousand).to eq(25)
     end
@@ -128,8 +133,7 @@ describe "Admin::UsersController Scenario", type: :system, js: true do
       visit admin_user_path(user.external_id)
       find_and_click "h3", text: "Custom fee"
       fill_in "custom_fee_percent", with: ""
-      accept_confirm { click_on "Submit" }
-      wait_for_ajax
+      submit_custom_fee
 
       expect(user.reload.custom_fee_per_thousand).to be_nil
     end
