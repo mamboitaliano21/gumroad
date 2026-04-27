@@ -126,6 +126,19 @@ describe Onetime::MigrateBulgariaBgnBalancesToEur do
         expect(balance.holding_amount_cents).to eq(19_558)
       end
 
+      it "prints each merchant_account and balance with previous and new values" do
+        account = bg_bgn_account
+        balance = create(:balance, merchant_account: bg_eur_account, holding_currency: "bgn", holding_amount_cents: 19_558)
+
+        expect { described_class.process(dry_run: false) }.to output(
+          a_string_including(
+            "merchant_account id=#{account.id} currency=bgn -> eur",
+            "balance id=#{balance.id} user_id=#{balance.user_id} merchant_account_id=#{balance.merchant_account_id} " \
+            "holding_currency=bgn -> eur, holding_amount_cents=19558 -> 10000"
+          )
+        ).to_stdout
+      end
+
       it "is idempotent — re-running produces no further changes" do
         balance = create(:balance, merchant_account: bg_eur_account, holding_currency: "bgn", holding_amount_cents: 19_558)
 

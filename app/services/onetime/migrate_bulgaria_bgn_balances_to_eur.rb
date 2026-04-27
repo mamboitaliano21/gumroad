@@ -54,9 +54,14 @@ module Onetime
 
         scope.find_in_batches(batch_size: BATCH_SIZE) do |batch|
           ReplicaLagWatcher.watch
-          ids = batch.map(&:id)
-          puts "merchant_accounts batch: #{ids.first}..#{ids.last}"
-          MerchantAccount.where(id: ids).update_all(currency: Currency::EUR) unless @dry_run
+
+          batch.each do |account|
+            puts "merchant_account id=#{account.id} currency=#{account.currency} -> #{Currency::EUR}"
+          end
+
+          next if @dry_run
+
+          MerchantAccount.where(id: batch.map(&:id)).update_all(currency: Currency::EUR)
         end
       end
 
@@ -70,12 +75,15 @@ module Onetime
 
         scope.find_in_batches(batch_size: BATCH_SIZE) do |batch|
           ReplicaLagWatcher.watch
-          puts "balances batch: #{batch.first.id}..#{batch.last.id}"
-
-          next if @dry_run
 
           batch.each do |balance|
             eur_cents = (BigDecimal(balance.holding_amount_cents) / BGN_PER_EUR).round
+            puts "balance id=#{balance.id} user_id=#{balance.user_id} merchant_account_id=#{balance.merchant_account_id} " \
+                 "holding_currency=#{balance.holding_currency} -> #{Currency::EUR}, " \
+                 "holding_amount_cents=#{balance.holding_amount_cents} -> #{eur_cents}"
+
+            next if @dry_run
+
             balance.update_columns(
               holding_currency: Currency::EUR,
               holding_amount_cents: eur_cents,
