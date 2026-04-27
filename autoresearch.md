@@ -48,12 +48,30 @@ Only `*_spec.rb` files. Key flaky tests identified from recent CI failures:
 
 ## What's Been Tried
 - #1 baseline keep 0 a439acf — Baseline: 0/5 green CI runs (16 total job failures). First batch of fixes: membership price updates ordering (tier param), embed spec timing (wait:10), admin alert timing, download page posts wait, reviews ordering. Mixed results - embed specs still flaking.
+- #2 keep 0 a0f4e7c — Round 3 fixes: HTML escaping in installments_helper_spec, embed spec switched to have_text with 15s wait, affiliate embed find with CSS selector. Latest CI run (25016321781) had only 1 failure (edit_spec.rb:708 - shared context radio button timing, can't fix within spec-only constraint). Down from 4 failures to 1.
 
 ## What's Been Tried
 - No logged experiments yet.
 
 ## Plugin Checkpoint
-- Last updated: 2026-04-27T20:19:35.157Z
+- Last updated: 2026-04-27T21:02:02.898Z
+- Runs tracked: 2 current / 2 total
+- Baseline: 0
+- Best kept: n/a
+- Confidence: n/a
+- Canonical branch: autoresearch/ci-speedup-2026-04-27
+- Last logged run: #2 keep a0f4e7c — Round 3 fixes: HTML escaping in installments_helper_spec, embed spec switched to have_text with 15s wait, affiliate embed find with CSS selector. Latest CI run (25016321781) had only 1 failure (edit_spec.rb:708 - shared context radio button timing, can't fix within spec-only constraint). Down from 4 failures to 1.
+- Pending run awaiting log_experiment: ./autoresearch.sh (0)
+
+Z
+- Runs tracked: 2 current / 2 total
+- Baseline: 0
+- Best kept: n/a
+- Confidence: n/a
+- Canonical branch: autoresearch/ci-speedup-2026-04-27
+- Last logged run: #2 keep a0f4e7c — Round 3 fixes: HTML escaping in installments_helper_spec, embed spec switched to have_text with 15s wait, affiliate embed find with CSS selector. Latest CI run (25016321781) had only 1 failure (edit_spec.rb:708 - shared context radio button timing, can't fix within spec-only constraint). Down from 4 failures to 1.
+
+Z
 - Runs tracked: 1 current / 1 total
 - Baseline: 0
 - Best kept: n/a
