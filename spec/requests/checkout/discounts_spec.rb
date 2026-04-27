@@ -750,6 +750,10 @@ describe("Checkout discounts page", type: :system, js: true) do
   describe "pagination" do
     before do
       stub_const("Checkout::DiscountsController::PER_PAGE", 1)
+      # Ensure deterministic ordering (default sort is updated_at DESC)
+      offer_code1.update_column(:updated_at, 1.second.from_now)
+      offer_code2.update_column(:updated_at, 1.second.ago)
+      offer_code3.update_column(:updated_at, 2.seconds.ago)
     end
 
     it "paginates the offer codes" do

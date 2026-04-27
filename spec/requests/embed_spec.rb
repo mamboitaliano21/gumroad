@@ -96,6 +96,9 @@ describe "Embed scenario", type: :system, js: true, mock_easypost: true do
         click_on "Add to cart"
       end
 
+      # Wait for the discount from URL to be applied (free product shows "Get" button)
+      expect(page).to have_selector(:command, "Get", wait: 20)
+
       check_out(product, is_free: true)
 
       purchase = Purchase.last
