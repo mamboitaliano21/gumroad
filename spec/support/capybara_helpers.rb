@@ -73,7 +73,7 @@ module CapybaraHelpers
     wait.until do
       page.driver.browser.switch_to.alert
       true
-    rescue Selenium::WebDriver::Error::NoAlertPresentError
+    rescue Selenium::WebDriver::Error::NoSuchAlertError
       false
     end
     page.driver.browser.switch_to.alert.accept
