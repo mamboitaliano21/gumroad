@@ -128,6 +128,26 @@ describe StripeMerchantAccountManager, :vcr do
         end.to raise_error(Stripe::InvalidRequestError)
       end
 
+      context "when Stripe raises postal_code_invalid error" do
+        let(:error) { Stripe::InvalidRequestError.new("The postal code you entered is not valid.", nil, code: "postal_code_invalid") }
+
+        before do
+          allow(Stripe::Account).to receive(:create).and_raise(error)
+        end
+
+        it "does not notify Sentry" do
+          expect(ErrorNotifier).not_to receive(:notify)
+          expect { subject.create_account(user, passphrase: "1234") }.to raise_error(Stripe::InvalidRequestError)
+        end
+
+        it "still cleans up the merchant account" do
+          merchant_account = create(:merchant_account, user:, charge_processor: MerchantRegistration::STRIPE)
+          allow(MerchantAccount).to receive(:create!).and_return(merchant_account)
+          expect(described_class).to receive(:cleanup_failed_merchant_account).with(merchant_account)
+          expect { subject.create_account(user, passphrase: "1234") }.to raise_error(Stripe::InvalidRequestError)
+        end
+      end
+
       context "when user compliance info contains whitespaces" do
         let(:user_compliance_info) do
           create(:user_compliance_info,

@@ -114,7 +114,7 @@ module StripeMerchantAccountManager
     merchant_account
   rescue Stripe::StripeError => e
     cleanup_failed_merchant_account(merchant_account) if merchant_account.present?
-    ErrorNotifier.notify(e)
+    ErrorNotifier.notify(e) unless e.is_a?(Stripe::InvalidRequestError) && e.code == "postal_code_invalid"
     raise
   end
 
