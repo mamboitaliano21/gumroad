@@ -6,11 +6,10 @@ Eliminate flaky tests in the antiwork/gumroad repo so that CI (tests.yml workflo
 The test suite has 85 parallel shards (20 fast + 65 slow) running on Ubicloud runners with Knapsack Pro distribution. Tests are RSpec: unit/model specs, controller specs, and system/request specs (Capybara with JS).
 
 ## Metrics
-- **Primary**: green_runs (count out of 5, higher is better)
-- **Secondary**: total_failures
+- **Primary**: green_runs (unitless, higher is better)
 
 ## How to Run
-`./autoresearch.sh` — pushes branch, triggers 5 sequential CI runs on GitHub, waits for each, counts green runs, outputs `METRIC green_runs=N` and `METRIC total_failures=N`.
+`autoresearch.sh` — should emit `METRIC name=number` lines for green_runs.
 
 ## Files in Scope
 Only `*_spec.rb` files. Key flaky tests identified from recent CI failures:
@@ -49,3 +48,14 @@ Only `*_spec.rb` files. Key flaky tests identified from recent CI failures:
 
 ## What's Been Tried
 _(Will be updated by the autoresearch plugin)_
+
+## What's Been Tried
+- No logged experiments yet.
+
+## Plugin Checkpoint
+- Last updated: 2026-04-27T18:04:36.259Z
+- Runs tracked: 0 current / 0 total
+- Baseline: n/a
+- Best kept: n/a
+- Confidence: n/a
+- Canonical branch: autoresearch/ci-speedup-2026-04-27
