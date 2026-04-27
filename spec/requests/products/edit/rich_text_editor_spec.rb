@@ -316,8 +316,10 @@ describe("Product Edit Rich Text Editor", type: :system, js: true) do
     visit("/products/#{@product.unique_permalink}/edit")
 
     within("[aria-label='Description']") do
-      expect(page).to have_link("Gumroad")
+      expect(page).to have_link("Gumroad", wait: 10)
       # Need to double click in order to ensure we have the editor input focused first
+      # Wait for the editor to be fully initialized before interacting
+      find("[contenteditable]", wait: 10)
       find("a").double_click
     end
     expect(page.driver.browser.window_handles.size).to eq(1)
