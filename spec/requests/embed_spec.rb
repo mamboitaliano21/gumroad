@@ -90,9 +90,9 @@ describe "Embed scenario", type: :system, js: true, mock_easypost: true do
       visit(create_embed_page(product, url: "#{product.long_url}/#{offer_code.code}", outbound: false))
 
       within_frame(find("iframe")) do
-        # Wait for the product page to fully render before checking the discount status
-        expect(page).to have_button("Add to cart")
-        expect(page).to have_selector("[role='status']", text: "$1 off will be applied at checkout (Code SXSW)")
+        # Wait for React to fully hydrate by checking for the CTA button
+        expect(page).to have_selector(:command, "Add to cart")
+        expect(page).to have_selector("[role='status']", text: "$1 off will be applied at checkout (Code SXSW)", wait: 10)
         click_on "Add to cart"
       end
 
