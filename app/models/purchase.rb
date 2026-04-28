@@ -2406,14 +2406,7 @@ class Purchase < ApplicationRecord
 
   # Unsubscribe the buyer of this purchase from all of the seller's emails
   def unsubscribe_buyer
-    Purchase.where(email:, seller_id:, can_contact: true).find_each do |purchase|
-      purchase.update!(can_contact: false)
-    rescue ActiveRecord::RecordInvalid
-      Rails.logger.info "Could not update purchase (#{id}) with validations turned on. Unsubscribing the buyer without running validations."
-
-      purchase.can_contact = false
-      purchase.save(validate: false)
-    end
+    Purchase.where(email:, seller_id:, can_contact: true).update_all(can_contact: false)
 
     Follower.unsubscribe(seller_id, email)
   end

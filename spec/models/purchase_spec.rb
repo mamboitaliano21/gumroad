@@ -4088,17 +4088,6 @@ describe Purchase, :vcr do
       }.from([true, true, true, true, true]).to([false, false, true, false, true])
     end
 
-    context "when purchase record is invalid" do
-      before do
-        @purchase_of_product_1.update_column(:price_cents, nil)
-        expect(@purchase_of_product_1.valid?).to eq(false) # Ensure that the record currently fails validation
-      end
-
-      it "unsubscribes the buyer without running validations" do
-        expect(Rails.logger).to receive(:info).with("Could not update purchase (#{@purchase_of_product_1.id}) with validations turned on. Unsubscribing the buyer without running validations.").and_call_original
-        expect { @purchase_of_product_1.unsubscribe_buyer }.to change { @purchase_of_product_1.reload.can_contact }.from(true).to(false)
-      end
-    end
   end
 
   describe "#toggle_off_can_contact_if_buyer_has_unsubscribed" do
