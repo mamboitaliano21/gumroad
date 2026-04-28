@@ -127,6 +127,18 @@ describe LoginsController, type: :controller, inertia: true do
       expect(flash[:warning]).to eq("An account does not exist with that email.")
     end
 
+    it "handles null bytes in login_identifier without raising" do
+      post "create", params: { user: { login_identifier: "test\0@example.com", password: "password" } }
+      expect(response).to redirect_to(login_path)
+      expect(flash[:warning]).to eq("An account does not exist with that email.")
+    end
+
+    it "handles null bytes in password without raising" do
+      post "create", params: { user: { login_identifier: @user.email, password: "wrong\0pass" } }
+      expect(response).to redirect_to(login_path)
+      expect(flash[:warning]).to eq("Please try another password. The one you entered was incorrect.")
+    end
+
     it "returns an error with no params" do
       post "create"
       expect(response).to redirect_to(login_path)
