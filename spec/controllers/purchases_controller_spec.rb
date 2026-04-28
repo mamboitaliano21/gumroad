@@ -1314,23 +1314,30 @@ describe PurchasesController, :vcr do
       end
 
       context "with secure_external_id" do
-        it "sets can_contact to false for all purchases from same seller and email" do
+        it "enqueues UnsubscribeBuyerJob for the matching purchase" do
           purchase = create(:purchase, can_contact: true)
-          purchase2 = create(:purchase, seller_id: purchase.seller.id, link: create(:product, user: purchase.seller), email: purchase.email, can_contact: true)
+          create(:purchase, seller_id: purchase.seller.id, link: create(:product, user: purchase.seller), email: purchase.email, can_contact: true)
           secure_id = purchase.secure_external_id(scope: "unsubscribe")
-          get :unsubscribe, params: { id: secure_id }
+
+          expect do
+            get :unsubscribe, params: { id: secure_id }
+          end.to change { UnsubscribeBuyerJob.jobs.size }.by(1)
+
           expect(response).to be_successful
-          expect(purchase.reload.can_contact).to eq false
-          expect(purchase2.reload.can_contact).to eq false
+          expect(UnsubscribeBuyerJob.jobs.last["args"]).to eq([purchase.id])
         end
 
         context "with confirmation_text from secure_redirect_controller" do
           it "handles correct confirmation_text" do
             purchase = create(:purchase, can_contact: true, email: "test@example.com")
             secure_id = purchase.secure_external_id(scope: "unsubscribe")
-            get :unsubscribe, params: { id: secure_id, confirmation_text: "test@example.com" }
+
+            expect do
+              get :unsubscribe, params: { id: secure_id, confirmation_text: "test@example.com" }
+            end.to change { UnsubscribeBuyerJob.jobs.size }.by(1)
+
             expect(response).to be_successful
-            expect(purchase.reload.can_contact).to eq false
+            expect(UnsubscribeBuyerJob.jobs.last["args"]).to eq([purchase.id])
           end
 
           it "handles incorrect confirmation_text by checking charge ID" do
@@ -1345,9 +1352,12 @@ describe PurchasesController, :vcr do
             other_purchase = create(:purchase, can_contact: true, email: "other@example.com")
             allow(Purchase).to receive(:find_by).with(id: charge.id).and_return(other_purchase)
 
-            get :unsubscribe, params: { id: secure_id, confirmation_text: "other@example.com" }
+            expect do
+              get :unsubscribe, params: { id: secure_id, confirmation_text: "other@example.com" }
+            end.to change { UnsubscribeBuyerJob.jobs.size }.by(1)
+
             expect(response).to be_successful
-            expect(other_purchase.reload.can_contact).to eq false
+            expect(UnsubscribeBuyerJob.jobs.last["args"]).to eq([other_purchase.id])
           end
 
           it "redirects to root path when confirmation_text doesn't match any associated email" do

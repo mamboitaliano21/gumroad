@@ -67,7 +67,7 @@ class PurchasesController < ApplicationController
     end
 
     if @purchase.present?
-      @purchase.unsubscribe_buyer
+      UnsubscribeBuyerJob.perform_async(@purchase.id)
       return
     end
 
