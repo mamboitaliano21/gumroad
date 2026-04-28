@@ -227,10 +227,6 @@ jobs:
             $WEB_REPO:test-${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }} \
             /usr/local/bin/gosu app bundle exec rake "knapsack_pro:queue:rspec[--format RSpec::Github::Formatter --tag ~skip --format progress]"
         timeout-minutes: 15
-          KNAPSACK_PRO_FIXED_QUEUE_SPLIT: true
-          CI: true
-          IN_DOCKER: true
-          WEB_REPO: gumroadteam/web
       - name: Clean up
         if: always()
         run: |
