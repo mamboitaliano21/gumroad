@@ -486,6 +486,7 @@ class Subscription < ApplicationRecord
   def update_current_plan!(new_variants:, new_price:, new_quantity: nil, perceived_price_cents: nil, is_applying_plan_change: false, skip_preparing_for_charge: false, offer_code: nil, clear_discount: false)
     raise Subscription::UpdateFailed, "Installment plans cannot be updated." if is_installment_plan?
     raise Subscription::UpdateFailed, "Changing plans for fixed-length subscriptions is not currently supported." if has_fixed_length?
+    raise Subscription::UpdateFailed, "Resume your membership to change tier or plan." if paused?
 
     ActiveRecord::Base.transaction do
       payment_option = last_payment_option

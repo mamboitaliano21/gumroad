@@ -2344,6 +2344,16 @@ describe Subscription, :vcr do
         end.to raise_error(Subscription::UpdateFailed).with_message("Installment plans cannot be updated.")
       end
     end
+
+    context "when paused" do
+      it "raises an error" do
+        @subscription.update!(paused_until: 1.month.from_now)
+
+        expect do
+          @subscription.update_current_plan!(new_variants: [@original_tier], new_price: @yearly_product_price)
+        end.to raise_error(Subscription::UpdateFailed).with_message("Resume your membership to change tier or plan.")
+      end
+    end
   end
 
   describe "last purchase state" do
