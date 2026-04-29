@@ -335,6 +335,14 @@ export default function SubscriptionsManage() {
       ? `Your first charge will be on ${formattedSubscriptionEndDate}.`
       : null;
 
+  const pausedUntilDate = subscription.paused_until ? parseISO(subscription.paused_until) : null;
+  const isPaused = pausedUntilDate !== null && pausedUntilDate > new Date();
+  const formattedPausedUntilDate = pausedUntilDate?.toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+
   return (
     <Card className="input-group mx-auto my-8 max-w-2xl">
       <CardContent asChild>
@@ -343,6 +351,15 @@ export default function SubscriptionsManage() {
           <h2 className="grow">{product.name}</h2>
         </header>
       </CardContent>
+
+      {isPaused ? (
+        <CardContent>
+          <Alert variant="info" className="grow">
+            Your {subscriptionEntity} is paused until {formattedPausedUntilDate}. It will resume automatically on the
+            next charge.
+          </Alert>
+        </CardContent>
+      ) : null}
 
       {!hasSavedCard && subscription.is_gift ? (
         <CardContent>
@@ -380,7 +397,7 @@ export default function SubscriptionsManage() {
         </CardContent>
       </StateContext.Provider>
 
-      {!restartable && !subscription.is_installment_plan ? (
+      {!restartable && !subscription.is_installment_plan && !isPaused ? (
         <CardContent>
           <Button
             color="danger"
