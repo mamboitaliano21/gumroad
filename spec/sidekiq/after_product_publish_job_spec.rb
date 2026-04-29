@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe AfterProductPublishWorker do
+describe AfterProductPublishJob do
   before do
     @user = create(:user)
     @product = create(:product, user: @user)

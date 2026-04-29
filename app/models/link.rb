@@ -212,7 +212,9 @@ class Link < ApplicationRecord
 
   validates_associated :installment_plan, message: -> (link, _) { link.installment_plan.errors.full_messages.first }
 
-  attr_accessor :publishing
+  attr_accessor :publishing, :enqueue_after_publish_job
+
+  after_commit :enqueue_after_product_publish_job, if: :enqueue_after_publish_job
 
   before_save :downcase_filetype
   before_save :remove_xml_tags
@@ -413,6 +415,7 @@ class Link < ApplicationRecord
     self.deleted_at = nil
     self.draft = false
     self.publishing = true
+    self.enqueue_after_publish_job = true
     deadlock_retries = 0
     begin
       if auto_transcode_videos?
@@ -425,11 +428,12 @@ class Link < ApplicationRecord
       deadlock_retries += 1
       retry if deadlock_retries <= 2
       raise
+    rescue => e
+      self.enqueue_after_publish_job = false
+      raise
     ensure
       self.publishing = false
     end
-
-    AfterProductPublishWorker.perform_async(id)
   end
 
   def publishing?
@@ -1311,6 +1315,11 @@ class Link < ApplicationRecord
     end
 
   private
+    def enqueue_after_product_publish_job
+      self.enqueue_after_publish_job = false
+      AfterProductPublishJob.perform_async(id)
+    end
+
     def compute_ppp_prices(price_cents, factors, currency)
       factors.keys.index_with do |country_code|
         price_cents == 0 ? 0 : [factors[country_code] * price_cents, currency["min_price"]].max.round

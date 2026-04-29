@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class AfterProductPublishWorker
+class AfterProductPublishJob
   include Sidekiq::Job
   sidekiq_options retry: 3, queue: :default
 

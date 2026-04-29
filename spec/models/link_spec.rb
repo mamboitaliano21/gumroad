@@ -916,14 +916,14 @@ describe Link, :vcr do
 
 
       context "when the seller has universal affiliates" do
-        it "enqueues AfterProductPublishWorker to associate affiliates in the background" do
+        it "enqueues AfterProductPublishJob to associate affiliates in the background" do
           create(:direct_affiliate, seller: @user, apply_to_all_products: true)
 
           expect do
             @product.publish!
-          end.to change(AfterProductPublishWorker.jobs, :size).by(1)
+          end.to change(AfterProductPublishJob.jobs, :size).by(1)
 
-          expect(AfterProductPublishWorker.jobs.last["args"]).to eq([@product.id])
+          expect(AfterProductPublishJob.jobs.last["args"]).to eq([@product.id])
         end
       end
 
