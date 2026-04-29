@@ -11,6 +11,7 @@ class RecurringChargeWorker
       subscription = Subscription.find(subscription_id)
       return if subscription.link.user.suspended?
       return unless subscription.alive?(include_pending_cancellation: false)
+      return if subscription.paused?
       return if subscription.is_test_subscription || subscription.current_subscription_price_cents == 0
       return if subscription.charges_completed?
       return if subscription.in_free_trial?

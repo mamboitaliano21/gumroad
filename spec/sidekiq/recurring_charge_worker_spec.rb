@@ -30,6 +30,26 @@ describe RecurringChargeWorker, :vcr do
     described_class.new.perform(subscription.id)
   end
 
+  it "doesn't call charge while the subscription is paused" do
+    link = create(:product, user: create(:user), subscription_duration: "monthly")
+    subscription = create(:subscription, user: create(:user), link:)
+    create(:purchase, link:, price_cents: link.price_cents, is_original_subscription_purchase: true,
+                      subscription:, created_at: 2.months.ago)
+    subscription.update!(paused_until: 1.month.from_now)
+    expect_any_instance_of(Subscription).not_to receive(:charge!)
+    described_class.new.perform(subscription.id)
+  end
+
+  it "calls charge after the pause window has elapsed" do
+    link = create(:product, user: create(:user), subscription_duration: "monthly")
+    subscription = create(:subscription, user: create(:user, credit_card: create(:credit_card)), link:)
+    create(:purchase, link:, price_cents: link.price_cents, is_original_subscription_purchase: true,
+                      subscription:, created_at: 2.months.ago)
+    subscription.update_columns(paused_until: 1.day.ago)
+    expect_any_instance_of(Subscription).to receive(:charge!)
+    described_class.new.perform(subscription.id)
+  end
+
   it "doesn't call charge if there was a purchase made the period for a monthly subscription" do
     link = create(:product, user: create(:user), subscription_duration: "monthly")
     subscription = create(:subscription, user: create(:user), link:)
