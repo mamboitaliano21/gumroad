@@ -34,6 +34,7 @@ import {
   applySelection,
 } from "$app/components/Product/ConfigurationSelector";
 import { showAlert } from "$app/components/server-components/Alert";
+import { PauseDeflectionModal } from "$app/components/Subscriptions/PauseDeflectionModal";
 import { Alert } from "$app/components/ui/Alert";
 import { Card, CardContent } from "$app/components/ui/Card";
 import { useOnChangeSync } from "$app/components/useOnChange";
@@ -77,6 +78,8 @@ type Props = {
     is_overdue_for_charge: boolean;
     is_gift: boolean;
     is_installment_plan: boolean;
+    paused_until: string | null;
+    can_be_paused: boolean;
   };
   contact_info: {
     email: string;
@@ -310,6 +313,15 @@ export default function SubscriptionsManage() {
     });
   };
 
+  const [showPauseModal, setShowPauseModal] = React.useState(false);
+  const handleCancelClick = () => {
+    if (subscription.can_be_paused) {
+      setShowPauseModal(true);
+    } else {
+      unsubscribe();
+    }
+  };
+
   const hasSavedCard = state.savedCreditCard != null;
   const isPendingFirstGifteePayment = subscription.is_gift && subscription.successful_purchases_count === 1;
   const formattedSubscriptionEndDate = parseISO(subscription.end_time_of_subscription).toLocaleDateString(undefined, {
@@ -373,7 +385,7 @@ export default function SubscriptionsManage() {
           <Button
             color="danger"
             outline
-            onClick={unsubscribe}
+            onClick={handleCancelClick}
             disabled={cancelForm.processing}
             className="grow basis-0"
           >
@@ -381,6 +393,13 @@ export default function SubscriptionsManage() {
           </Button>
         </CardContent>
       ) : null}
+
+      <PauseDeflectionModal
+        open={showPauseModal}
+        onClose={() => setShowPauseModal(false)}
+        subscriptionId={subscription.id}
+        canBePaused={subscription.can_be_paused}
+      />
     </Card>
   );
 }

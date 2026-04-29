@@ -691,6 +691,8 @@ describe CheckoutPresenter do
                                  is_overdue_for_charge: false,
                                  is_gift: false,
                                  is_installment_plan: false,
+                                 paused_until: nil,
+                                 can_be_paused: false,
                                },
                                contact_info: { city: "San Francisco", country: "US", email: @subscription.email, full_name: "Jane Gumroad", state: "CA", street: "100 Main St", zip: "00000" },
                                discover_url: discover_url(protocol: PROTOCOL, host: DISCOVER_DOMAIN),
