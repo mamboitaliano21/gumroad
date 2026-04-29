@@ -22,6 +22,7 @@ class PurchaseSearchService
     exclude_non_original_subscription_purchases: false,
     exclude_deactivated_subscriptions: false,
     exclude_cancelled_or_pending_cancellation_subscriptions: false,
+    exclude_pending_failure_subscriptions: false,
     exclude_refunded: false,
     exclude_refunded_except_subscriptions: false,
     exclude_unreversed_chargedback: false,
@@ -125,6 +126,7 @@ class PurchaseSearchService
       build_body_exclude_not_charged_non_free_trial_purchases
       build_body_exclude_deactivated_subscriptions
       build_body_exclude_cancelled_or_pending_cancellation_subscriptions
+      build_body_exclude_pending_failure_subscriptions
       build_body_exclude_cant_contact
       build_body_exclude_giftees
       build_body_exclude_gifters
@@ -316,6 +318,11 @@ class PurchaseSearchService
     def build_body_exclude_cancelled_or_pending_cancellation_subscriptions
       return unless @options[:exclude_cancelled_or_pending_cancellation_subscriptions]
       @body[:query][:bool][:must_not] << { exists: { field: "subscription_cancelled_at" } }
+    end
+
+    def build_body_exclude_pending_failure_subscriptions
+      return unless @options[:exclude_pending_failure_subscriptions]
+      @body[:query][:bool][:must_not] << { term: { "subscription_pending_failure" => true } }
     end
 
     def build_body_exclude_cant_contact

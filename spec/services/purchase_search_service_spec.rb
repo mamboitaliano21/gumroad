@@ -195,6 +195,15 @@ describe PurchaseSearchService do
       expect(get_records(exclude_cancelled_or_pending_cancellation_subscriptions: true)).to match_array([purchase_1])
     end
 
+    it "can exclude pending failure subscriptions" do
+      purchase_1 = create(:membership_purchase)
+      purchase_2 = create(:membership_purchase, is_original_subscription_purchase: true)
+      create(:purchase, subscription: purchase_2.subscription, purchase_state: "failed", created_at: 1.day.from_now)
+      index_model_records(Purchase)
+
+      expect(get_records(exclude_pending_failure_subscriptions: true)).to match_array([purchase_1])
+    end
+
     it "can exclude refunded" do
       purchase_1 = create(:purchase, stripe_refunded: nil)
       purchase_2 = create(:purchase, stripe_refunded: false)

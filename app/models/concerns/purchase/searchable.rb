@@ -111,6 +111,7 @@ module Purchase::Searchable
       indexes :subscription_id, type: :long
       indexes :subscription_cancelled_at, type: :date
       indexes :subscription_deactivated_at, type: :date
+      indexes :subscription_pending_failure, type: :boolean
       indexes :taxonomy_id, type: :long
     end
 
@@ -197,6 +198,8 @@ module Purchase::Searchable
         purchaser.attributes[$LAST_MATCH_INFO[1]] if purchaser.present?
       when /\Asubscription_(id|cancelled_at|deactivated_at)\z/
         subscription.attributes[$LAST_MATCH_INFO[1]] if subscription.present?
+      when "subscription_pending_failure"
+        subscription&.pending_failure? || false
       when "taxonomy_id"
         link.taxonomy_id
       when "variant_ids"
@@ -243,12 +246,18 @@ module Purchase::Searchable
     def update_purchase_index
       tracked_columns = %w[cancelled_at deactivated_at]
       changed_tracked_columns = attributes_committed & tracked_columns
-      if changed_tracked_columns.present?
+      pending_failure_changed = (attributes_committed & %w[failed_at ended_at cancelled_at]).present?
+
+      if changed_tracked_columns.present? || pending_failure_changed
+        fields = changed_tracked_columns.map { |name| "subscription_#{name}" }
+        fields << "subscription_pending_failure" if pending_failure_changed
+        fields.uniq!
+
         purchases.select(:id).find_each do |purchase|
           options = {
             "record_id" => purchase.id,
             "class_name" => "Purchase",
-            "fields" => changed_tracked_columns.map { |name| ["subscription_#{name}"] }.flatten
+            "fields" => fields,
           }
           ElasticsearchIndexerWorker.perform_in(2.seconds, "update", options)
         end
@@ -294,18 +303,17 @@ module Purchase::Searchable
       end
 
       def update_same_purchaser_subscription_purchase_documents
-        should_update = successful?
-        should_update &= previous_changes.key?(:purchase_state)
-        should_update &= !is_original_subscription_purchase?
-        should_update &= subscription.present? && subscription.original_purchase.present?
-        return unless should_update
+        return unless previous_changes.key?(:purchase_state)
+        return if is_original_subscription_purchase?
+        return unless subscription.present? && subscription.original_purchase.present?
+
+        fields = ["subscription_pending_failure"]
+        fields << "latest_charge_date" if successful?
 
         options = {
           "record_id" => subscription.original_purchase.id,
           "class_name" => "Purchase",
-          "fields" => [
-            "latest_charge_date",
-          ]
+          "fields" => fields,
         }
         ElasticsearchIndexerWorker.perform_in(2.seconds, "update", options)
       end
