@@ -14,14 +14,14 @@ export const PageListLayout = React.forwardRef<
   <div
     ref={ref}
     className={classNames(
-      "flex min-h-0 flex-col gap-6 bg-background p-4 [scrollbar-gutter:stable] md:p-8 lg:flex-row lg:gap-8 lg:overflow-y-auto",
+      "flex min-h-0 flex-col gap-6 overflow-y-auto bg-background p-4 [scrollbar-gutter:stable] md:p-8 lg:flex-row lg:gap-8",
       className,
     )}
   >
     <div className="flex flex-col gap-4 [scrollbar-gutter:stable] lg:sticky lg:top-0 lg:h-full lg:max-h-[calc(100vh-184px)] lg:w-80 lg:overflow-y-auto lg:pb-8">
       {pageList}
     </div>
-    <div className="h-0 flex-1">{children}</div>
+    <div className="min-h-0 flex-1">{children}</div>
   </div>
 ));
 PageListLayout.displayName = "PageListLayout";
