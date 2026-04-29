@@ -5,8 +5,7 @@ require "spec_helper"
 describe AfterProductPublishWorker do
   before do
     @user = create(:user)
-    @merchant_account = create(:merchant_account_stripe, user: @user)
-    @product = create(:product_with_pdf_file, user: @user)
+    @product = create(:product, user: @user)
   end
 
   describe "#perform" do
