@@ -2432,6 +2432,103 @@ describe Subscription, :vcr do
     end
   end
 
+  describe "#paused?" do
+    it "returns false when paused_until is nil" do
+      expect(@subscription.paused?).to be(false)
+    end
+
+    it "returns true when paused_until is in the future" do
+      @subscription.update!(paused_until: 1.day.from_now)
+      expect(@subscription.paused?).to be(true)
+    end
+
+    it "returns false when paused_until is in the past" do
+      @subscription.update_columns(paused_until: 1.day.ago)
+      expect(@subscription.paused?).to be(false)
+    end
+  end
+
+  describe "#can_be_paused_by_buyer?" do
+    it "returns true for an alive monthly subscription" do
+      expect(@subscription.can_be_paused_by_buyer?).to be(true)
+    end
+
+    it "returns false when the subscription is an installment plan" do
+      @subscription.update!(is_installment_plan: true)
+      expect(@subscription.can_be_paused_by_buyer?).to be(false)
+    end
+
+    it "returns false when the subscription is a test subscription" do
+      @subscription.update!(is_test_subscription: true)
+      expect(@subscription.can_be_paused_by_buyer?).to be(false)
+    end
+
+    it "returns false when the subscription is in a free trial" do
+      allow(@subscription).to receive(:in_free_trial?).and_return(true)
+      expect(@subscription.can_be_paused_by_buyer?).to be(false)
+    end
+
+    it "returns false when the subscription is pending cancellation" do
+      @subscription.cancel!(by_seller: false)
+      expect(@subscription.can_be_paused_by_buyer?).to be(false)
+    end
+
+    it "returns false when the subscription is already paused" do
+      @subscription.update!(paused_until: 1.month.from_now)
+      expect(@subscription.can_be_paused_by_buyer?).to be(false)
+    end
+
+    it "returns false when the subscription has failed" do
+      @subscription.update!(failed_at: Time.current)
+      expect(@subscription.can_be_paused_by_buyer?).to be(false)
+    end
+
+    it "returns false when the fixed-length subscription is on its final cycle" do
+      allow(@subscription).to receive(:has_fixed_length?).and_return(true)
+      allow(@subscription).to receive(:remaining_charges_count).and_return(1)
+      expect(@subscription.can_be_paused_by_buyer?).to be(false)
+    end
+  end
+
+  describe "#pause!" do
+    it "sets paused_until to last_paid_period_end + cycles * period for 1 cycle" do
+      @subscription.pause!(cycles: 1)
+      expected = @subscription.end_time_of_last_paid_period + @subscription.period
+      expect(@subscription.reload.paused_until.to_i).to eq(expected.to_i)
+    end
+
+    it "sets paused_until to last_paid_period_end + 3 * period for 3 cycles" do
+      @subscription.pause!(cycles: 3)
+      expected = @subscription.end_time_of_last_paid_period + 3 * @subscription.period
+      expect(@subscription.reload.paused_until.to_i).to eq(expected.to_i)
+    end
+
+    it "raises ArgumentError when cycles is not in PAUSE_CYCLES_ALLOWED" do
+      expect { @subscription.pause!(cycles: 2) }.to raise_error(ArgumentError)
+      expect { @subscription.pause!(cycles: 0) }.to raise_error(ArgumentError)
+    end
+
+    it "raises CannotBePaused when ineligible" do
+      @subscription.update!(is_test_subscription: true)
+      expect { @subscription.pause!(cycles: 1) }.to raise_error(Subscription::CannotBePaused)
+    end
+
+    it "raises CannotBePaused for installment plans" do
+      @subscription.update!(is_installment_plan: true)
+      expect { @subscription.pause!(cycles: 1) }.to raise_error(Subscription::CannotBePaused)
+    end
+
+    it "raises CannotBePaused when already paused" do
+      @subscription.update!(paused_until: 2.months.from_now)
+      expect { @subscription.pause!(cycles: 1) }.to raise_error(Subscription::CannotBePaused)
+    end
+
+    it "raises CannotBePaused when pending cancellation" do
+      @subscription.cancel!(by_seller: false)
+      expect { @subscription.pause!(cycles: 1) }.to raise_error(Subscription::CannotBePaused)
+    end
+  end
+
   describe "#for_tier?" do
     let(:product) { create(:membership_product_with_preset_tiered_pricing) }
     let(:tier_1) { product.tiers.first }

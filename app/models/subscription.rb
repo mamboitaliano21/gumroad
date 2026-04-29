@@ -8,6 +8,9 @@ class Subscription < ApplicationRecord
   end
 
   class UpdateFailed < StandardError; end
+  class CannotBePaused < StandardError; end
+
+  PAUSE_CYCLES_ALLOWED = [1, 3].freeze
 
   has_paper_trail
   include ExternalId
@@ -64,6 +67,7 @@ class Subscription < ApplicationRecord
 
   validate :must_have_payment_option
   validate :installment_plans_cannot_be_cancelled_by_buyer
+  validate :installment_plans_cannot_be_paused_by_buyer
 
   before_create :enable_mor_fee
   after_create :update_last_payment_option
@@ -447,6 +451,33 @@ class Subscription < ApplicationRecord
 
       CustomerLowPriorityMailer.subscription_ended(id).deliver_later(queue: "low")
       ContactingCreatorMailer.subscription_ended(id).deliver_later(queue: "critical") if seller.enable_payment_email?
+    end
+  end
+
+  def paused?
+    paused_until.present? && paused_until.future?
+  end
+
+  def can_be_paused_by_buyer?
+    return false if is_installment_plan?
+    return false if is_test_subscription
+    return false if in_free_trial?
+    return false unless alive?(include_pending_cancellation: false)
+    return false if cancelled_at.present?
+    return false if paused?
+    return false if has_fixed_length? && remaining_charges_count <= 1
+
+    true
+  end
+
+  def pause!(cycles:)
+    raise ArgumentError, "cycles must be one of #{PAUSE_CYCLES_ALLOWED}" unless PAUSE_CYCLES_ALLOWED.include?(cycles)
+
+    with_lock do
+      raise CannotBePaused unless can_be_paused_by_buyer?
+
+      self.paused_until = end_time_of_last_paid_period + cycles * period
+      save!
     end
   end
 
@@ -928,6 +959,13 @@ class Subscription < ApplicationRecord
       return unless cancelled_at_changed?(from: nil)
 
       errors.add(:base, "Installment plans cannot be cancelled by the customer") if cancelled_by_buyer?
+    end
+
+    def installment_plans_cannot_be_paused_by_buyer
+      return unless is_installment_plan?
+      return unless paused_until_changed?(from: nil) && paused_until.present?
+
+      errors.add(:base, "Installment plans cannot be paused")
     end
 
     def must_have_payment_option
