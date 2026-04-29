@@ -848,6 +848,7 @@ Rails.application.routes.draw do
         get :manage
         post :unsubscribe_by_user
         post :unsubscribe_by_seller
+        post :pause_by_user
         put :update, to: "purchases#update_subscription"
       end
       scope module: "subscriptions" do

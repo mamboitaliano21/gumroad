@@ -3,13 +3,13 @@
 class SubscriptionsController < ApplicationController
   include PageMeta::Product
 
-  PUBLIC_ACTIONS = %i[manage unsubscribe_by_user].freeze
+  PUBLIC_ACTIONS = %i[manage unsubscribe_by_user pause_by_user].freeze
   before_action :authenticate_user!, except: PUBLIC_ACTIONS
   after_action :verify_authorized, except: PUBLIC_ACTIONS
 
-  before_action :fetch_subscription, only: %i[unsubscribe_by_seller unsubscribe_by_user]
+  before_action :fetch_subscription, only: %i[unsubscribe_by_seller unsubscribe_by_user pause_by_user]
   before_action :set_noindex_header, only: [:manage]
-  before_action :check_can_manage, only: [:manage, :unsubscribe_by_user]
+  before_action :check_can_manage, only: [:manage, :unsubscribe_by_user, :pause_by_user]
 
   layout "inertia", only: [:manage]
 
@@ -28,6 +28,16 @@ class SubscriptionsController < ApplicationController
     redirect_to manage_subscription_path(@subscription.external_id), notice: "Your #{subscription_entity} has been cancelled."
   rescue ActiveRecord::RecordInvalid => e
     redirect_to manage_subscription_path(@subscription.external_id), alert: e.message
+  end
+
+  def pause_by_user
+    cycles = params[:cycles].to_i
+    @subscription.pause!(cycles: cycles)
+    redirect_to manage_subscription_path(@subscription.external_id),
+                notice: "Your membership is paused until #{@subscription.paused_until.to_date.to_fs(:long)}."
+  rescue ArgumentError, Subscription::CannotBePaused, ActiveRecord::RecordInvalid => e
+    redirect_to manage_subscription_path(@subscription.external_id),
+                alert: e.is_a?(Subscription::CannotBePaused) ? "This membership cannot be paused." : e.message
   end
 
   def manage

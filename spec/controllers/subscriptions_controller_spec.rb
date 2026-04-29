@@ -99,6 +99,60 @@ describe SubscriptionsController do
       end
     end
 
+    describe "POST pause_by_user" do
+      before do
+        cookies.encrypted[@subscription.cookie_key] = @subscription.external_id
+      end
+
+      it "pauses the subscription for 1 cycle" do
+        post :pause_by_user, params: { id: @subscription.external_id, cycles: 1 }
+
+        expect(@subscription.reload.paused_until).to be_present
+        expect(response).to redirect_to(manage_subscription_path(@subscription.external_id))
+        expect(flash[:notice]).to include("paused until")
+      end
+
+      it "pauses the subscription for 3 cycles" do
+        post :pause_by_user, params: { id: @subscription.external_id, cycles: 3 }
+
+        expect(@subscription.reload.paused_until).to be_present
+      end
+
+      it "rejects an unsupported cycle count" do
+        post :pause_by_user, params: { id: @subscription.external_id, cycles: 2 }
+
+        expect(@subscription.reload.paused_until).to be_nil
+        expect(response).to redirect_to(manage_subscription_path(@subscription.external_id))
+        expect(flash[:alert]).to be_present
+      end
+
+      it "rejects pausing an installment plan" do
+        product = create(:product, :with_installment_plan, user: seller, price_cents: 30_00)
+        purchase_with_installment_plan = create(:installment_plan_purchase, link: product, purchaser: subscriber)
+        subscription = purchase_with_installment_plan.subscription
+        cookies.encrypted[subscription.cookie_key] = subscription.external_id
+
+        post :pause_by_user, params: { id: subscription.external_id, cycles: 1 }
+
+        expect(subscription.reload.paused_until).to be_nil
+        expect(flash[:alert]).to eq("This membership cannot be paused.")
+      end
+
+      context "when the encrypted cookie is not present" do
+        before do
+          cookies.encrypted[@subscription.cookie_key] = nil
+        end
+
+        it "redirects to magic link page" do
+          expect do
+            post :pause_by_user, params: { id: @subscription.external_id, cycles: 1 }
+          end.not_to change { @subscription.reload.paused_until }
+
+          expect(response).to redirect_to(new_subscription_magic_link_path(@subscription.external_id))
+        end
+      end
+    end
+
     describe "GET manage" do
       context "when subscription has ended" do
         it "returns 404" do
