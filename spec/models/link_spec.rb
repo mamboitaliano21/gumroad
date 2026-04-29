@@ -916,42 +916,14 @@ describe Link, :vcr do
 
 
       context "when the seller has universal affiliates" do
-        it "associates those affiliates with the product and notifies them" do
-          direct_affiliate = create(:direct_affiliate, seller: @user, apply_to_all_products: true)
+        it "enqueues AfterProductPublishWorker to associate affiliates in the background" do
+          create(:direct_affiliate, seller: @user, apply_to_all_products: true)
 
           expect do
             @product.publish!
-          end.to have_enqueued_mail(AffiliateMailer, :notify_direct_affiliate_of_new_product).with(direct_affiliate.id, @product.id)
+          end.to change(AfterProductPublishWorker.jobs, :size).by(1)
 
-          expect(@product.reload.direct_affiliates).to match_array [direct_affiliate]
-          expect(direct_affiliate.reload.products).to match_array [@product]
-        end
-
-        context "who are already associated with the product" do
-          it "does not add or notify them" do
-            direct_affiliate = create(:direct_affiliate, seller: @user, apply_to_all_products: true, products: [@product])
-
-            expect do
-              @product.publish!
-            end.to_not have_enqueued_mail(AffiliateMailer, :notify_direct_affiliate_of_new_product).with(direct_affiliate.id, @product.id)
-
-            expect(@product.reload.direct_affiliates).to match_array [direct_affiliate]
-            expect(direct_affiliate.reload.products).to match_array [@product]
-          end
-        end
-
-        context "when affiliate has been removed" do
-          it "does not add or notify them" do
-            direct_affiliate = create(:direct_affiliate, seller: @user, apply_to_all_products: true)
-            direct_affiliate.mark_deleted!
-
-            expect do
-              @product.publish!
-            end.to_not have_enqueued_mail(AffiliateMailer, :notify_direct_affiliate_of_new_product).with(direct_affiliate.id, @product.id)
-
-            expect(@product.reload.direct_affiliates).to be_empty
-            expect(direct_affiliate.reload.products).to be_empty
-          end
+          expect(AfterProductPublishWorker.jobs.last["args"]).to eq([@product.id])
         end
       end
 
