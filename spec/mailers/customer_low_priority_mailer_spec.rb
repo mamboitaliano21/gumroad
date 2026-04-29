@@ -67,6 +67,22 @@ describe CustomerLowPriorityMailer do
     end
   end
 
+  describe "subscription_paused" do
+    let(:product) { create(:membership_product, name: "fan club", subscription_duration: "monthly") }
+    let(:subscription) { create(:subscription, link: product, paused_until: Date.parse("2027-01-15")) }
+
+    before do
+      create(:purchase, is_original_subscription_purchase: true, link: product, subscription:)
+    end
+
+    it "tells the buyer when the membership resumes" do
+      mail = CustomerLowPriorityMailer.subscription_paused(subscription.id)
+      expect(mail.subject).to eq("Your membership is paused.")
+      expect(mail.body.encoded).to include("fan club")
+      expect(mail.body.encoded).to include("January 15, 2027")
+    end
+  end
+
   describe "subscription_cancelled_by_seller" do
     context "memberships" do
       before do

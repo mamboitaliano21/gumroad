@@ -12,7 +12,7 @@ class CustomerLowPriorityMailer < ApplicationMailer
                                                      subscription_charge_failed subscription_product_deleted subscription_renewal_reminder
                                                      subscription_price_change_notification subscription_ended free_trial_expiring_soon
                                                      credit_card_expiring_membership subscription_early_fraud_warning_notification
-                                                     subscription_giftee_added_card]
+                                                     subscription_giftee_added_card subscription_paused]
 
   layout "layouts/email"
 
@@ -79,6 +79,11 @@ class CustomerLowPriorityMailer < ApplicationMailer
   def subscription_cancelled(subscription_id)
     @subscription = Subscription.find(subscription_id)
     @subject = "Your subscription has been canceled."
+  end
+
+  def subscription_paused(subscription_id)
+    @subscription = Subscription.find(subscription_id)
+    @subject = "Your membership is paused."
   end
 
   def subscription_cancelled_by_seller(subscription_id)

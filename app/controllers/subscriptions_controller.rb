@@ -33,6 +33,7 @@ class SubscriptionsController < ApplicationController
   def pause_by_user
     cycles = params[:cycles].to_i
     @subscription.pause!(cycles: cycles)
+    CustomerLowPriorityMailer.subscription_paused(@subscription.id).deliver_later(queue: "low")
     redirect_to manage_subscription_path(@subscription.external_id),
                 notice: "Your membership is paused until #{@subscription.paused_until.to_date.to_fs(:long)}."
   rescue ArgumentError, Subscription::CannotBePaused, ActiveRecord::RecordInvalid => e

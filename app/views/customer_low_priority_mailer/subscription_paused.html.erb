@@ -1,0 +1,4 @@
+<%= header_section("Your membership is paused.") %>
+<div>
+  <p>Your membership to <%= @subscription.link.name %> is paused until <%= @subscription.paused_until.to_date.to_fs(:long) %>. You will not be charged during this time, and your access will resume automatically when the next charge succeeds.</p>
+</div>
