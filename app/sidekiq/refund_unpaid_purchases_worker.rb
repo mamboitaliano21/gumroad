@@ -11,9 +11,9 @@ class RefundUnpaidPurchasesWorker
     admin = User.find(admin_user_id)
     user.comments.create!(
       author_id: admin.id,
-      author_name: admin.name,
+      author_name: admin.name_or_username,
       comment_type: Comment::COMMENT_TYPE_REFUND_BALANCE,
-      content: "Refund balance initiated by #{admin.name}."
+      content: "Refund balance initiated by #{admin.name_or_username}."
     )
 
     unpaid_balance_ids = user.balances.unpaid.ids
