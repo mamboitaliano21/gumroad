@@ -41,5 +41,18 @@ describe RefundUnpaidPurchasesWorker, :vcr do
       expect(RefundPurchaseWorker).not_to have_enqueued_sidekiq_job(@purchase_without_balance.id, @admin_user.id)
       expect(RefundPurchaseWorker).not_to have_enqueued_sidekiq_job(@purchase_with_paid_balance.id, @admin_user.id)
     end
+
+    it "logs an admin comment recording who initiated the refund balance action" do
+      @user.flag_for_fraud!(author_id: @admin_user.id)
+      @user.suspend_for_fraud!(author_id: @admin_user.id)
+
+      expect do
+        described_class.new.perform(@user.id, @admin_user.id)
+      end.to change { @user.comments.where(comment_type: Comment::COMMENT_TYPE_REFUND_BALANCE).count }.by(1)
+
+      comment = @user.comments.where(comment_type: Comment::COMMENT_TYPE_REFUND_BALANCE).last
+      expect(comment.content).to eq("Refund balance initiated by #{@admin_user.name}.")
+      expect(comment.author_id).to eq(@admin_user.id)
+    end
   end
 end
