@@ -22,6 +22,12 @@ class Admin::UsersController < Admin::BaseController
 
   def refund_balance
     RefundUnpaidPurchasesWorker.perform_async(@user.id, current_user.id)
+    @user.comments.create!(
+      author_id: current_user.id,
+      author_name: current_user.name,
+      comment_type: Comment::COMMENT_TYPE_REFUND_BALANCE,
+      content: "Refund balance initiated by #{current_user.name}."
+    )
     render json: { success: true }
   end
 

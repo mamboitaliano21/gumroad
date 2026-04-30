@@ -179,6 +179,18 @@ describe Admin::UsersController, type: :controller, inertia: true do
         post :refund_balance, params: { external_id: @user.external_id }
         expect(@purchase.reload.stripe_refunded).to_not be(true)
       end
+
+      it "logs a comment on the user recording the refund balance action" do
+        @user.flag_for_fraud(author_id: @admin_user.id)
+        @user.suspend_for_fraud(author_id: @admin_user.id)
+        expect {
+          post :refund_balance, params: { external_id: @user.external_id }
+        }.to change { @user.comments.where(comment_type: Comment::COMMENT_TYPE_REFUND_BALANCE).count }.by(1)
+
+        comment = @user.comments.where(comment_type: Comment::COMMENT_TYPE_REFUND_BALANCE).last
+        expect(comment.author_id).to eq(@admin_user.id)
+        expect(comment.content).to include("Refund balance initiated by #{@admin_user.name}")
+      end
     end
   end
 
