@@ -89,5 +89,25 @@ describe AffiliateRedirectController do
         expect(response).to redirect_to creator.subdomain_with_protocol
       end
     end
+
+    context "when the request includes a landing-page slug (?lp=)" do
+      it "preserves the lp parameter in the redirect URL" do
+        get :set_cookie_and_redirect, params: { affiliate_id: direct_affiliate.external_id_numeric, lp: "abcdefgh" }
+
+        expect(response).to be_redirect
+        expect(Rack::Utils.parse_query(URI.parse(response.location).query)["lp"]).to eq("abcdefgh")
+      end
+
+      it "preserves the lp parameter alongside a custom affiliate destination URL" do
+        direct_affiliate.update!(destination_url: "https://gumroad.com/l/abc", apply_to_all_products: true)
+
+        get :set_cookie_and_redirect, params: { affiliate_id: direct_affiliate.external_id_numeric, lp: "abcdefgh" }
+
+        expect(response).to be_redirect
+        query = Rack::Utils.parse_query(URI.parse(response.location).query)
+        expect(query["lp"]).to eq("abcdefgh")
+        expect(query["affiliate_id"]).to eq(direct_affiliate.external_id_numeric.to_s)
+      end
+    end
   end
 end
