@@ -67,11 +67,13 @@ Rails.application.routes.draw do
         put "bundle_contents", to: "bundle_contents#update"
         resource :thumbnail, only: [:create, :destroy]
         resources :covers, only: [:create, :destroy]
+        resources :landing_pages, only: [:index, :create]
         member do
           put "disable"
           put "enable"
         end
       end
+      resources :landing_pages, only: [:show, :update, :destroy], param: :slug
       resources :sales, only: [:index, :show] do
         member do
           put :mark_as_shipped
