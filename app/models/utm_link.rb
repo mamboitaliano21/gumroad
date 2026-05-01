@@ -23,7 +23,8 @@ class UtmLink < ApplicationRecord
     profile_page: "profile_page",
     subscribe_page: "subscribe_page",
     product_page: "product_page",
-    post_page: "post_page"
+    post_page: "post_page",
+    landing_page: "landing_page"
   }, prefix: :target, validate: true
 
   before_validation :set_permalink
@@ -79,6 +80,9 @@ class UtmLink < ApplicationRecord
       "Profile page"
     elsif target_subscribe_page?
       "Subscribe page"
+    elsif target_landing_page?
+      label = target_resource.name.presence || target_resource.slug
+      "Landing page — #{target_resource.product.name}: #{label}"
     end
   end
 
@@ -106,12 +110,13 @@ class UtmLink < ApplicationRecord
     case name.to_s
     when target_resource_types[:post_page] then Installment
     when target_resource_types[:product_page] then Link
+    when target_resource_types[:landing_page] then LandingPage
     end
   end
 
   private
     def requires_resource_id?
-      target_product_page? || target_post_page?
+      target_product_page? || target_post_page? || target_landing_page?
     end
 
     def last_click_at_is_same_or_after_first_click_at
@@ -131,6 +136,8 @@ class UtmLink < ApplicationRecord
         target_resource.long_url
       elsif target_post_page?
         target_resource.full_url
+      elsif target_landing_page?
+        target_resource.url
       end
     end
 

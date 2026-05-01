@@ -161,6 +161,7 @@ class Link < ApplicationRecord
   has_many :call_availabilities, foreign_key: "call_id"
   has_one :call_limitation_info, foreign_key: "call_id"
   has_many :seller_profile_sections, foreign_key: :product_id
+  has_many :landing_pages, foreign_key: :product_id
   has_many :public_files, as: :resource
   has_many :alive_public_files, -> { alive }, class_name: "PublicFile", as: :resource
   has_many :communities, as: :resource, dependent: :destroy
@@ -397,6 +398,7 @@ class Link < ApplicationRecord
   def delete!
     mark_deleted!
     custom_domain&.mark_deleted!
+    landing_pages.alive.find_each(&:mark_deleted!)
     alive_public_files.update_all(scheduled_for_deletion_at: 10.minutes.from_now)
     CancelSubscriptionsForProductWorker.perform_in(10.minutes, id) if subscriptions.active.present?
     DeleteProductFilesWorker.perform_in(10.minutes, id)

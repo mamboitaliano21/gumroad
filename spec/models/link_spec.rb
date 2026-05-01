@@ -70,9 +70,9 @@ describe Link, :vcr do
     end
 
     it "fails if price exceeds the maximum storable value" do
-      expect {
+      expect do
         build(:product, user: create(:user, verified: true), price_cents: 2_147_483_648)
-      }.to raise_error(Link::LinkInvalid, "Sorry, the price entered is too large.")
+      end.to raise_error(Link::LinkInvalid, "Sorry, the price entered is too large.")
     end
 
     it "fails if price is too low" do
@@ -648,6 +648,7 @@ describe Link, :vcr do
 
   describe "associations" do
     it { is_expected.to have_many(:self_service_affiliate_products).with_foreign_key(:product_id) }
+    it { is_expected.to have_many(:landing_pages).with_foreign_key(:product_id) }
 
     describe "#confirmed_collaborators" do
       it "returns all confirmed collaborators" do
@@ -2934,6 +2935,21 @@ describe Link, :vcr do
 
       expect { product.delete! }.not_to raise_error
       expect(product.reload.deleted?).to be(true)
+    end
+
+    it "soft-deletes alive landing pages and leaves already-deleted landing pages untouched" do
+      product = create(:product)
+      alive_one = create(:landing_page, product:)
+      alive_two = create(:landing_page, product:)
+      deleted = create(:landing_page, product:)
+      deleted.mark_deleted!
+      previously_deleted_at = deleted.reload.deleted_at
+
+      product.delete!
+
+      expect(alive_one.reload.deleted_at).to be_present
+      expect(alive_two.reload.deleted_at).to be_present
+      expect(deleted.reload.deleted_at).to be_within(1.second).of(previously_deleted_at)
     end
   end
 

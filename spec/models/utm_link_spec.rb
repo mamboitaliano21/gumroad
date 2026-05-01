@@ -38,7 +38,8 @@ describe UtmLink do
                           .with_values(profile_page: "profile_page",
                                        subscribe_page: "subscribe_page",
                                        product_page: "product_page",
-                                       post_page: "post_page")
+                                       post_page: "post_page",
+                                       landing_page: "landing_page")
                           .backed_by_column_of_type(:string)
                           .with_prefix(:target) }
 
@@ -67,6 +68,20 @@ describe UtmLink do
 
         it "is valid when present" do
           subject.target_resource_id = create(:post).id
+          expect(subject).to be_valid
+        end
+      end
+
+      context "when target_resource_type is landing_page" do
+        subject(:utm_link) { build(:utm_link, target_resource_type: :landing_page) }
+
+        it "is invalid when absent" do
+          expect(subject).to be_invalid
+          expect(subject.errors[:target_resource_id]).to include("can't be blank")
+        end
+
+        it "is valid when present" do
+          subject.target_resource_id = create(:landing_page).id
           expect(subject).to be_valid
         end
       end
@@ -392,6 +407,17 @@ describe UtmLink do
         expect(utm_link.utm_url).to eq("#{post.full_url}?utm_campaign=#{utm_link.utm_campaign}&utm_medium=#{utm_link.utm_medium}&utm_source=#{utm_link.utm_source}")
       end
     end
+
+    context "when target_resource_type is landing_page" do
+      it "returns the landing page URL with UTM parameters merged on top of the lp param" do
+        seller = create(:user)
+        product = create(:product, user: seller)
+        landing_page = create(:landing_page, product:)
+        utm_link = create(:utm_link, target_resource_type: :landing_page, target_resource_id: landing_page.id, seller:)
+
+        expect(utm_link.utm_url).to eq("#{product.long_url}?lp=#{landing_page.slug}&utm_campaign=#{utm_link.utm_campaign}&utm_medium=#{utm_link.utm_medium}&utm_source=#{utm_link.utm_source}")
+      end
+    end
   end
 
   describe "#target_resource" do
@@ -411,6 +437,10 @@ describe UtmLink do
 
       utm_link = create(:utm_link, target_resource_type: :subscribe_page, seller:)
       expect(utm_link.target_resource).to be_nil
+
+      landing_page = create(:landing_page, product: create(:product, user: seller))
+      utm_link = create(:utm_link, target_resource_type: :landing_page, target_resource_id: landing_page.id, seller:)
+      expect(utm_link.target_resource).to eq(landing_page)
     end
   end
 
@@ -511,6 +541,12 @@ describe UtmLink do
     context "when target_resource_type is subscribe_page" do
       it "returns nil" do
         expect(described_class.polymorphic_class_for(:subscribe_page)).to be_nil
+      end
+    end
+
+    context "when target_resource_type is landing_page" do
+      it "returns LandingPage" do
+        expect(described_class.polymorphic_class_for(:landing_page)).to eq(LandingPage)
       end
     end
   end
