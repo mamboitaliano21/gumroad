@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_24_000000) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_25_000000) do
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "name", limit: 191, null: false
     t.string "record_type", limit: 191, null: false
@@ -1041,6 +1041,22 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_24_000000) do
     t.datetime "updated_at", precision: nil, null: false
     t.index ["receiver_id"], name: "index_invites_on_receiver_id", unique: true
     t.index ["sender_id"], name: "index_invites_on_sender_id"
+  end
+
+  create_table "landing_pages", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "product_id", null: false
+    t.string "slug", limit: 8, null: false
+    t.string "name"
+    t.text "description"
+    t.string "custom_summary"
+    t.json "custom_attributes"
+    t.integer "position", default: 0, null: false
+    t.datetime "deleted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_landing_pages_on_deleted_at"
+    t.index ["product_id"], name: "index_landing_pages_on_product_id"
+    t.index ["slug"], name: "index_landing_pages_on_slug", unique: true
   end
 
   create_table "large_sellers", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
