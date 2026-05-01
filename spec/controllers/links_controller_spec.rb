@@ -4046,6 +4046,113 @@ describe LinksController, :vcr, inertia: true do
           end.not_to change(DiscoverSearch, :count)
         end
       end
+
+      describe "landing page override (?lp=)" do
+        let!(:product) do
+          product = create(:product, user: @user, name: "Original product", description: "<p>Original description</p>")
+          product.save_custom_summary("Original summary")
+          product.save_custom_attributes([{ "name" => "Format", "value" => "PDF" }])
+          product.reload
+        end
+        let!(:landing_page) do
+          create(:landing_page,
+                 product:,
+                 slug: "abcdefgh",
+                 name: "Override headline",
+                 description: "<p>Override copy</p>",
+                 custom_summary: "Override summary",
+                 custom_attributes: [{ "name" => "Audience", "value" => "Engineers" }])
+        end
+
+        it "applies all four overrides when slug matches an alive landing page" do
+          get :show, params: { id: product.to_param, lp: "abcdefgh" }
+
+          expect(response).to be_successful
+          expect(inertia.component).to eq("Products/Show")
+          expect(inertia.props[:product][:name]).to eq("Override headline")
+          expect(inertia.props[:product][:description_html]).to include("Override copy")
+          expect(inertia.props[:product][:summary]).to eq("Override summary")
+          expect(inertia.props[:product][:attributes]).to include({ name: "Audience", value: "Engineers" })
+        end
+
+        it "renders the canonical product page when no ?lp= is given" do
+          get :show, params: { id: product.to_param }
+
+          expect(inertia.props[:product][:name]).to eq("Original product")
+          expect(inertia.props[:product][:summary]).to eq("Original summary")
+        end
+
+        it "falls through to the canonical page when the slug is unknown" do
+          get :show, params: { id: product.to_param, lp: "zzz99999" }
+
+          expect(response).to be_successful
+          expect(inertia.props[:product][:name]).to eq("Original product")
+        end
+
+        it "falls through when the landing page has been soft-deleted" do
+          landing_page.mark_deleted!
+
+          get :show, params: { id: product.to_param, lp: "abcdefgh" }
+
+          expect(inertia.props[:product][:name]).to eq("Original product")
+        end
+
+        it "matches the slug case-insensitively" do
+          get :show, params: { id: product.to_param, lp: "ABCDEFGH" }
+
+          expect(inertia.props[:product][:name]).to eq("Override headline")
+        end
+
+        it "falls through when the slug belongs to a different product" do
+          other_product = create(:product, user: @user)
+          create(:landing_page, product: other_product, slug: "otherslg", name: "Other override")
+
+          get :show, params: { id: product.to_param, lp: "otherslg" }
+
+          expect(inertia.props[:product][:name]).to eq("Original product")
+        end
+
+        it "sets X-Robots-Tag: noindex when ?lp= is present" do
+          get :show, params: { id: product.to_param, lp: "abcdefgh" }
+          expect(response.headers["X-Robots-Tag"]).to eq("noindex")
+        end
+
+        it "sets X-Robots-Tag: noindex even when slug is missing (matches offer-code precedent)" do
+          get :show, params: { id: product.to_param, lp: "zzz99999" }
+          expect(response.headers["X-Robots-Tag"]).to eq("noindex")
+        end
+
+        it "does not apply override on the profile layout" do
+          get :show, params: { id: product.to_param, lp: "abcdefgh", layout: "profile" }
+
+          expect(inertia.component).to eq("Products/Profile/Show")
+          expect(inertia.props[:product][:name]).to eq("Original product")
+        end
+
+        it "does not apply override on the iframe overlay layout" do
+          get :show, params: { id: product.to_param, lp: "abcdefgh", overlay: "true" }
+
+          expect(inertia.component).to eq("Products/Iframe/Show")
+          expect(inertia.props[:product][:name]).to eq("Original product")
+        end
+
+        it "applies override when an unrecognized layout value falls through to Products/Show" do
+          get :show, params: { id: product.to_param, lp: "abcdefgh", layout: "bogus" }
+
+          expect(inertia.component).to eq("Products/Show")
+          expect(inertia.props[:product][:name]).to eq("Override headline")
+        end
+
+        it "preserves ?lp= when redirecting to checkout via ?wanted=true" do
+          get :show, params: { id: product.to_param, lp: "abcdefgh", wanted: "true" }
+
+          expect(response).to be_redirect
+          redirect_url = URI.parse(response.location)
+          expect(redirect_url.path).to eq("/checkout")
+          query_params = Rack::Utils.parse_query(redirect_url.query)
+          expect(query_params["lp"]).to eq("abcdefgh")
+        end
+      end
     end
 
     describe "GET cart_items_count" do

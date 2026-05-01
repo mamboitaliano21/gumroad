@@ -136,6 +136,14 @@ class LinksController < ApplicationController
     presenter_props = { recommended_by: params[:recommended_by], discount_code: params[:offer_code] || params[:code], quantity: (params[:quantity] || 1).to_i, layout: params[:layout], seller_custom_domain_url: }
     @body_class = "iframe" if params[:overlay] || params[:embed]
 
+    landing_page = nil
+    if params[:lp].present? &&
+       params[:layout] != Product::Layout::PROFILE &&
+       params[:layout] != Product::Layout::DISCOVER &&
+       !params[:overlay] && !params[:embed]
+      landing_page = @product.landing_pages.alive.find_by(slug: params[:lp])
+    end
+
     if ["search", "discover"].include?(params[:recommended_by])
       create_discover_search!(
         clicked_resource: @product,
@@ -167,7 +175,9 @@ class LinksController < ApplicationController
           if params[:embed] || params[:overlay]
             render inertia: "Products/Iframe/Show", props: presenter.iframe_product_props(**presenter_props)
           else
-            render inertia: "Products/Show", props: presenter.product_page_props(**presenter_props)
+            props = presenter.product_page_props(**presenter_props)
+            props = LandingPageProductPresenter.apply(props:, landing_page:) if landing_page
+            render inertia: "Products/Show", props:
           end
         end
       end
@@ -260,7 +270,7 @@ class LinksController < ApplicationController
   end
 
   def set_x_robots_tag_header
-    set_noindex_header  if params[:code].present?
+    set_noindex_header if params[:code].present? || params[:lp].present?
   end
 
   def increment_views
