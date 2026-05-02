@@ -31,6 +31,8 @@ module Pages
         when %w[product name] then escape(@product&.name)
         when %w[product price] then escape(format_price)
         when %w[product price_cents] then @product ? @product.price_cents.to_s : ""
+        when %w[product rating] then @product ? @product.average_rating.to_s : ""
+        when %w[product review_count] then @product ? @product.reviews_count.to_s : ""
         when %w[product url] then @product&.long_url.to_s
         when %w[product checkout_url] then checkout_url
         when %w[product thumbnail_url] then @product&.thumbnail&.url.to_s

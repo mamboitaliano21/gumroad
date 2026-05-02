@@ -23,6 +23,20 @@ describe Pages::TemplateExpander do
       expect(expand("{{product.price_cents}}", products: [product])).to eq("500")
     end
 
+    it "expands product.rating to the average rating string" do
+      create(:product_review_stat, link: product, reviews_count: 12, average_rating: 4.8)
+      expect(expand("{{product.rating}}", products: [product.reload])).to eq("4.8")
+    end
+
+    it "expands product.review_count to the reviews count string" do
+      create(:product_review_stat, link: product, reviews_count: 12, average_rating: 4.8)
+      expect(expand("{{product.review_count}}", products: [product.reload])).to eq("12")
+    end
+
+    it "expands product.rating and product.review_count to defaults when no review stat exists" do
+      expect(expand("{{product.rating}} ({{product.review_count}})", products: [product])).to eq("0.0 (0)")
+    end
+
     it "expands product.url to the long_url" do
       expect(expand("{{product.url}}", products: [product])).to eq(product.long_url)
     end
@@ -89,6 +103,14 @@ describe Pages::TemplateExpander do
 
     it "expands product.thumbnail_url to an empty string" do
       expect(expand("{{product.thumbnail_url}}", products: [])).to eq("")
+    end
+
+    it "expands product.rating to an empty string" do
+      expect(expand("{{product.rating}}", products: [])).to eq("")
+    end
+
+    it "expands product.review_count to an empty string" do
+      expect(expand("{{product.review_count}}", products: [])).to eq("")
     end
   end
 
