@@ -93,6 +93,8 @@ Rails.application.routes.draw do
       get "/tax_forms", to: "tax_forms#index"
       get "/tax_forms/:year/:tax_form_type/download", to: "tax_forms#download"
       get "/earnings", to: "earnings#show"
+
+      resources :pages, only: %i[index show], param: :slug
     end
   end
 
