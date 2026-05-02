@@ -1067,6 +1067,8 @@ Rails.application.routes.draw do
     get "/secure_url_redirect", to: "secure_redirect#new", as: :secure_url_redirect
     post "/secure_url_redirect", to: "secure_redirect#create"
 
+    get "/pg/:slug", to: "pages#show", as: :view_page
+
     # TODO (chris): review and replace usage of routes below with UserCustomDomainConstraint routes
     get "/:username", to: "users#show", as: "user"
     get "/:username/follow", to: "followers#new", as: "follow_user_page"
@@ -1141,6 +1143,7 @@ Rails.application.routes.draw do
     end
     post "/posts/:id/increment_post_views", to: "posts#increment_post_views"
     get "/p/:slug", to: "posts#show", as: :custom_domain_view_post
+    get "/pg/:slug", to: "pages#show", as: :custom_domain_view_page
     get "/:username/posts_paginated", to: "users/posts#paginated"
     get "/posts", to: redirect("/")
     get "/posts/:post_id/comments", to: "comments#index", as: :custom_domain_post_comments

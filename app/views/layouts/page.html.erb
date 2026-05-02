@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="<%= @page.settings_json["lang"].presence || "en" %>">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= @page.title %></title>
+  <% if @page.settings_json["description"].present? %>
+    <meta name="description" content="<%= @page.settings_json["description"] %>">
+  <% end %>
+  <link rel="canonical" href="<%= UrlService.domain_with_protocol %>/pg/<%= @page.slug %>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="<%= UrlService.root_domain_with_protocol %>/js/gumroad.js" defer></script>
+  <script src="<%= UrlService.root_domain_with_protocol %>/js/gumroad-embed.js" defer></script>
+</head>
+<body>
+<%= yield %>
+</body>
+</html>
