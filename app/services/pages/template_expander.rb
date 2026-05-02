@@ -36,8 +36,11 @@ module Pages
         when %w[product url] then @product&.long_url.to_s
         when %w[product checkout_url] then checkout_url
         when %w[product thumbnail_url] then @product&.thumbnail&.url.to_s
+        when %w[product cover_url] then @product&.display_asset_previews&.first&.url.to_s
+        when %w[product description] then @product&.description.to_s
         when %w[seller name] then escape(@product&.user&.name.presence || @product&.user&.username)
         when %w[seller username] then escape(@product&.user&.username)
+        when %w[seller avatar_url] then @product&.user&.avatar_url.to_s
         end
       end
 

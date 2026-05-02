@@ -41,6 +41,22 @@ describe Pages::TemplateExpander do
       expect(expand("{{product.url}}", products: [product])).to eq(product.long_url)
     end
 
+    it "expands product.description verbatim so the downstream HtmlScrubber sees real HTML" do
+      product.update!(description: "<p>Hello <strong>world</strong></p>")
+      expect(expand("{{product.description}}", products: [product])).to eq("<p>Hello <strong>world</strong></p>")
+    end
+
+    it "expands product.cover_url to the first display asset preview's URL" do
+      preview = double("AssetPreview", url: "https://cdn.example.com/cover.png")
+      allow(product).to receive(:display_asset_previews).and_return([preview])
+      expect(expand("{{product.cover_url}}", products: [product])).to eq("https://cdn.example.com/cover.png")
+    end
+
+    it "expands seller.avatar_url to the user's avatar URL" do
+      allow(product.user).to receive(:avatar_url).and_return("https://cdn.example.com/avatar.png")
+      expect(expand("{{seller.avatar_url}}", products: [product])).to eq("https://cdn.example.com/avatar.png")
+    end
+
     it "expands product.checkout_url with wanted=true appended" do
       expect(expand("{{product.checkout_url}}", products: [product])).to eq("#{product.long_url}?wanted=true")
     end
@@ -111,6 +127,18 @@ describe Pages::TemplateExpander do
 
     it "expands product.review_count to an empty string" do
       expect(expand("{{product.review_count}}", products: [])).to eq("")
+    end
+
+    it "expands product.description to an empty string" do
+      expect(expand("{{product.description}}", products: [])).to eq("")
+    end
+
+    it "expands product.cover_url to an empty string" do
+      expect(expand("{{product.cover_url}}", products: [])).to eq("")
+    end
+
+    it "expands seller.avatar_url to an empty string" do
+      expect(expand("{{seller.avatar_url}}", products: [])).to eq("")
     end
   end
 
