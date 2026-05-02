@@ -4,7 +4,7 @@ class Api::V2::PagesController < Api::V2::BaseController
   PAGES_PER_PAGE = 50
 
   before_action(only: %i[index show]) { doorkeeper_authorize!(*Doorkeeper.configuration.public_scopes.concat([:view_public])) }
-  before_action(only: %i[create update destroy]) { doorkeeper_authorize! :edit_products }
+  before_action(only: %i[create update destroy sanitize]) { doorkeeper_authorize! :edit_products }
   before_action :fetch_page, only: %i[show update destroy]
 
   def index
@@ -65,6 +65,13 @@ class Api::V2::PagesController < Api::V2::BaseController
     else
       error_with_object(:page, @page)
     end
+  end
+
+  def sanitize
+    products = resolve_products(params[:product_permalinks])
+    expanded = Pages::TemplateExpander.call(params[:content_html].to_s, products: products)
+    result = Pages::HtmlScrubber.call(expanded, mode: parse_mode(:lossy))
+    render_response(true, html: result[:html], errors: result[:errors])
   end
 
   private

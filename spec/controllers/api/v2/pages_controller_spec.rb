@@ -330,4 +330,56 @@ describe Api::V2::PagesController do
       end
     end
   end
+
+  describe "POST 'sanitize'" do
+    before do
+      @action = :sanitize
+      @params = { content_html: "<section><h1>Hi</h1></section>" }
+    end
+
+    it_behaves_like "authorized oauth v1 api method"
+    it_behaves_like "authorized oauth v1 api method only for edit_products scope"
+
+    describe "when logged in with edit_products scope" do
+      before do
+        @token = create("doorkeeper/access_token", application: @app, resource_owner_id: @seller.id, scopes: "edit_products")
+        @params.merge!(access_token: @token.token)
+      end
+
+      it "returns sanitized html and an empty errors array for safe content" do
+        post @action, params: @params
+        body = response.parsed_body
+        expect(body["success"]).to be true
+        expect(body["html"]).to include("<h1>Hi</h1>")
+        expect(body["errors"]).to eq([])
+      end
+
+      it "strips disallowed tags and reports them in errors while still returning success" do
+        post @action, params: @params.merge(content_html: "<p>ok</p><script>bad()</script>")
+        body = response.parsed_body
+        expect(body["success"]).to be true
+        expect(body["html"]).not_to include("<script>")
+        expect(body["errors"]).to be_present
+        expect(body["errors"].first["tag"]).to eq("script")
+      end
+
+      it "still returns success: true in strict mode (dry-run never aborts)" do
+        post @action, params: @params.merge(content_html: "<p>ok</p><script>bad()</script>", mode: "strict")
+        body = response.parsed_body
+        expect(body["success"]).to be true
+        expect(body["errors"]).to be_present
+      end
+
+      it "expands product tokens via TemplateExpander before sanitizing" do
+        product = create(:product, user: @seller, name: "Brutalist Theme")
+        post @action, params: @params.merge(content_html: "<h1>{{product.name}}</h1>", product_permalinks: product.unique_permalink)
+        expect(response.parsed_body["html"]).to include("Brutalist Theme")
+      end
+
+      it "leaves unknown tokens untouched so creators spot typos" do
+        post @action, params: @params.merge(content_html: "<h1>{{product.nope}}</h1>")
+        expect(response.parsed_body["html"]).to include("{{product.nope}}")
+      end
+    end
+  end
 end
