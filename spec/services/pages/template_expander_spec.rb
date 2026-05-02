@@ -92,6 +92,88 @@ describe Pages::TemplateExpander do
     end
   end
 
+  describe "indexed tokens" do
+    let(:seller) { create(:user, name: "Goodsnooze", username: "goodsnooze") }
+    let(:product) { create(:product, user: seller, price_cents: 0, price_currency_type: "eur") }
+
+    before do
+      cover_a = double("AssetPreview", url: "https://cdn.example.com/cover-a.png")
+      cover_b = double("AssetPreview", url: "https://cdn.example.com/cover-b.png")
+      allow(product).to receive(:display_asset_previews).and_return([cover_a, cover_b])
+
+      free = double("Variant", name: "MacWhisper Free", description: "Native macOS app", price_difference_cents: 0)
+      pro = double("Variant", name: "MacWhisper Pro", description: "1 Pro license", price_difference_cents: 6400)
+      relation = double("ActiveRecord::Relation")
+      allow(relation).to receive(:in_order).and_return([free, pro])
+      allow(product).to receive(:alive_variants).and_return(relation)
+    end
+
+    it "expands product.covers[N].url to the Nth display asset preview's URL" do
+      expect(expand("{{product.covers[0].url}}", products: [product])).to eq("https://cdn.example.com/cover-a.png")
+      expect(expand("{{product.covers[1].url}}", products: [product])).to eq("https://cdn.example.com/cover-b.png")
+    end
+
+    it "expands product.variants[N].name to the Nth variant's name" do
+      expect(expand("{{product.variants[0].name}}", products: [product])).to eq("MacWhisper Free")
+      expect(expand("{{product.variants[1].name}}", products: [product])).to eq("MacWhisper Pro")
+    end
+
+    it "expands product.variants[N].price to base + price_difference, formatted in the product's currency" do
+      expect(expand("{{product.variants[0].price}}", products: [product])).to eq("€0")
+      expect(expand("{{product.variants[1].price}}", products: [product])).to eq("€64")
+    end
+
+    it "expands product.variants[N].description" do
+      expect(expand("{{product.variants[0].description}}", products: [product])).to eq("Native macOS app")
+    end
+
+    it "applies a non-zero base price when computing variant.price" do
+      paid_product = create(:product, user: seller, price_cents: 500, price_currency_type: "usd")
+      pro = double("Variant", name: "Pro", description: "x", price_difference_cents: 6400)
+      relation = double("ActiveRecord::Relation")
+      allow(relation).to receive(:in_order).and_return([pro])
+      allow(paid_product).to receive(:alive_variants).and_return(relation)
+      expect(expand("{{product.variants[0].price}}", products: [paid_product])).to eq("$69")
+    end
+
+    it "expands an out-of-bounds covers index to an empty string" do
+      expect(expand("{{product.covers[99].url}}", products: [product])).to eq("")
+    end
+
+    it "expands out-of-bounds variants indices to empty strings" do
+      expect(expand("{{product.variants[99].name}}", products: [product])).to eq("")
+      expect(expand("{{product.variants[99].price}}", products: [product])).to eq("")
+      expect(expand("{{product.variants[99].description}}", products: [product])).to eq("")
+    end
+
+    it "HTML-escapes variant.name and variant.description text values" do
+      malicious = double("Variant", name: "<script>", description: "<img onerror=x>", price_difference_cents: 0)
+      relation = double("ActiveRecord::Relation")
+      allow(relation).to receive(:in_order).and_return([malicious])
+      allow(product).to receive(:alive_variants).and_return(relation)
+      expect(expand("{{product.variants[0].name}}", products: [product])).to eq("&lt;script&gt;")
+      expect(expand("{{product.variants[0].description}}", products: [product])).to eq("&lt;img onerror=x&gt;")
+    end
+  end
+
+  describe "indexed tokens with no linked products" do
+    it "expands product.covers[N].url to an empty string" do
+      expect(expand("{{product.covers[0].url}}", products: [])).to eq("")
+    end
+
+    it "expands product.variants[N].name to an empty string" do
+      expect(expand("{{product.variants[0].name}}", products: [])).to eq("")
+    end
+
+    it "expands product.variants[N].price to an empty string" do
+      expect(expand("{{product.variants[0].price}}", products: [])).to eq("")
+    end
+
+    it "expands product.variants[N].description to an empty string" do
+      expect(expand("{{product.variants[0].description}}", products: [])).to eq("")
+    end
+  end
+
   describe "HTML escaping in text contexts" do
     let(:seller) { create(:user, name: "Evil <script>alert('xss')</script> seller", username: "evilseller") }
     let(:product) { create(:product, user: seller, name: 'Widget "with quotes" & <b>bold</b>') }
