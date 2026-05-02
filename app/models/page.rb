@@ -11,6 +11,8 @@ class Page < ApplicationRecord
   DEFAULT_SETTINGS = { "layout" => "chromeless" }.freeze
 
   belongs_to :seller, class_name: "User"
+  has_many :page_products, dependent: :destroy
+  has_many :products, through: :page_products
 
   before_validation :set_slug
   before_save :ensure_settings_json

@@ -5,6 +5,8 @@ require "spec_helper"
 describe Page do
   describe "associations" do
     it { is_expected.to belong_to(:seller).class_name("User").optional(false) }
+    it { is_expected.to have_many(:page_products).dependent(:destroy) }
+    it { is_expected.to have_many(:products).through(:page_products) }
   end
 
   describe "validations" do

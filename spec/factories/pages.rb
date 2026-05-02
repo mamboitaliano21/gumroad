@@ -16,4 +16,10 @@ FactoryBot.define do
       settings_json { { "layout" => "gumroad" } }
     end
   end
+
+  factory :page_product do
+    association :page
+    association :product, factory: :product
+    position { 0 }
+  end
 end
