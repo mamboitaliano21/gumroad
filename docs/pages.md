@@ -137,7 +137,7 @@ Read in this order if you want depth:
 - `app/services/pages/template_expander.rb` — `{{product.X}}` / `{{seller.X}}` token substitution. Runs BEFORE the scrubber so token-produced URLs flow through the URL allowlist.
 - `app/controllers/api/v2/pages_controller.rb` — read/write/sanitize endpoints (Doorkeeper-authed).
 - `app/controllers/pages_controller.rb` + `app/views/layouts/page.html.erb` — public chromeless render at `/pg/:slug`.
-- `db/seeds/030_development/zz_pages.rb` + `db/seeds/030_development/pages/macwhisper_demo.html` — the seeded demo Page.
+- `db/seeds/030_development/pages.rb` + `db/seeds/030_development/pages/macwhisper_demo.html` — the seeded demo Page.
 
 ## Out of v1 scope
 
