@@ -112,6 +112,8 @@ The cli's OAuth login flow is hardcoded to production (`app.gumroad.com`), so fo
 
    Open `gumroad-page.html` directly in a browser (no preview server needed). The page already shows MacWhisper's name, cover, description, and three pricing tiers as concrete values — not `{{product.X}}` placeholders. Only the per-tier Buy button `href`s contain `{{product.variants[N].checkout_url}}` tokens (those resolve at server render time, not in the local file).
 
+   > Heads-up: in the raw-file view, clicking a Buy button does nothing — the href is the literal token string. Use `pages preview --products` (next step) to see resolved checkout links locally, or `pages create --publish` to see them on the published Page.
+
 8. Hot-reload preview the file with the product attached so variant checkout URLs resolve in the local sidebar too. Sanitizer feedback shows in a sidebar at http://localhost:7373:
 
    ```sh
