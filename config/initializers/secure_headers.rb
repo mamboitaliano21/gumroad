@@ -214,3 +214,18 @@ SecureHeaders::Configuration.default do |config|
     config.csp[:script_src] << "helperai.dev" # Required by Helper widget
   end
 end
+
+SecureHeaders::Configuration.override(:pages_csp) do |config|
+  config.csp = {
+    default_src: %w('self'),
+    script_src: %w('self' 'unsafe-eval' cdn.tailwindcss.com),
+    style_src: %w('self' 'unsafe-inline' fonts.googleapis.com),
+    img_src: %w('self' https: data:),
+    font_src: %w('self' https: data: fonts.gstatic.com),
+    frame_src: %w('self'),
+    form_action: %w('none'),
+    base_uri: %w('none'),
+    object_src: %w('none'),
+    frame_ancestors: %w('self'),
+  }
+end

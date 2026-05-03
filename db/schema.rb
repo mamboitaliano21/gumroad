@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_24_000000) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_25_000000) do
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "name", limit: 191, null: false
     t.string "record_type", limit: 191, null: false
@@ -1344,6 +1344,20 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_24_000000) do
     t.bigint "flags", default: 0, null: false
     t.datetime "review_reminder_scheduled_at"
     t.index ["purchaser_id"], name: "index_orders_on_purchaser_id"
+  end
+
+  create_table "pages", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "seller_id", null: false
+    t.string "unique_permalink", null: false
+    t.string "title", null: false
+    t.text "raw_html", size: :long
+    t.text "sanitized_html", size: :long
+    t.datetime "unpublished_at"
+    t.datetime "deleted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["seller_id", "deleted_at"], name: "index_pages_on_seller_id_and_deleted_at"
+    t.index ["unique_permalink"], name: "index_pages_on_unique_permalink", unique: true
   end
 
   create_table "payment_options", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|

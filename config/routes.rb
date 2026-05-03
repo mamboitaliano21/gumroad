@@ -827,6 +827,7 @@ Rails.application.routes.draw do
     get "/products", to: "links#index", as: :products
     get "/l/:id", to: "links#show", defaults: { format: "html" }, as: :short_link
     get "/l/:id/:code", to: "links#show", defaults: { format: "html" }, as: :short_link_offer_code
+    get "/pg/:unique_permalink", to: "pages#show", as: :view_page
     get "/cart_items_count", to: "links#cart_items_count"
 
     get "/products/:id" => redirect("/l/%{id}")
