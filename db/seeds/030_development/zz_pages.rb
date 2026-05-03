@@ -59,27 +59,37 @@ def load_pages
   end
 
   page_title = "MacWhisper — Apple-style demo"
-  if seller.pages.alive.exists?(title: page_title)
+  page = seller.pages.alive.find_by(title: page_title)
+  if page
     puts "Pages demo already seeded under #{seller.email}"
-    return
+  else
+    raw = File.read(File.expand_path("pages/macwhisper_demo.html", __dir__))
+    expanded = Pages::TemplateExpander.call(raw, products: [product])
+    scrubbed = Pages::HtmlScrubber.call(expanded, mode: :strict)
+    if scrubbed[:errors].any?
+      raise "Pages demo HTML failed strict sanitize: #{scrubbed[:errors].inspect}"
+    end
+
+    page = Page.create!(
+      seller_id: seller.id,
+      title: page_title,
+      content_html_raw: raw,
+      content_html_sanitized: scrubbed[:html],
+      published: true
+    )
+    PageProduct.create!(page: page, product: product, position: 0)
+    puts "Created pages demo — slug=#{page.slug} url=/pg/#{page.slug}"
   end
 
-  raw = File.read(File.expand_path("pages/macwhisper_demo.html", __dir__))
-  expanded = Pages::TemplateExpander.call(raw, products: [product])
-  scrubbed = Pages::HtmlScrubber.call(expanded, mode: :strict)
-  if scrubbed[:errors].any?
-    raise "Pages demo HTML failed strict sanitize: #{scrubbed[:errors].inspect}"
+  at_exit do
+    bar = "=" * 72
+    puts
+    puts bar
+    puts "  Pages MacWhisper demo"
+    puts "  Page (chromeless):  https://gumroad.dev/pg/#{page.slug}"
+    puts "  Product page:       https://seller.gumroad.dev/l/#{product.unique_permalink}"
+    puts bar
   end
-
-  page = Page.create!(
-    seller_id: seller.id,
-    title: page_title,
-    content_html_raw: raw,
-    content_html_sanitized: scrubbed[:html],
-    published: true
-  )
-  PageProduct.create!(page: page, product: product, position: 0)
-  puts "Created pages demo — slug=#{page.slug} url=/pg/#{page.slug}"
 end
 
 load_pages
