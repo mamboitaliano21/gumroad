@@ -89,15 +89,12 @@ module Pages
 
       def checkout_url
         return "" unless @product
-        url = @product.long_url
-        url.include?("?") ? "#{url}&wanted=true" : "#{url}?wanted=true"
+        "#{UrlService.domain_with_protocol}/checkout?product=#{@product.unique_permalink}"
       end
 
       def variant_checkout_url(variant)
         return "" unless @product && variant
-        url = @product.long_url
-        separator = url.include?("?") ? "&" : "?"
-        "#{url}#{separator}wanted=true&option=#{variant.external_id}"
+        "#{UrlService.domain_with_protocol}/checkout?product=#{@product.unique_permalink}&option=#{variant.external_id}"
       end
   end
 end

@@ -57,8 +57,8 @@ describe Pages::TemplateExpander do
       expect(expand("{{seller.avatar_url}}", products: [product])).to eq("https://cdn.example.com/avatar.png")
     end
 
-    it "expands product.checkout_url with wanted=true appended" do
-      expect(expand("{{product.checkout_url}}", products: [product])).to eq("#{product.long_url}?wanted=true")
+    it "expands product.checkout_url to the canonical /checkout page URL" do
+      expect(expand("{{product.checkout_url}}", products: [product])).to eq("#{UrlService.domain_with_protocol}/checkout?product=#{product.unique_permalink}")
     end
 
     it "expands seller.name (falling back to username when name is blank)" do
@@ -79,7 +79,7 @@ describe Pages::TemplateExpander do
     it "handles tokens in attribute context" do
       html = '<a href="{{product.checkout_url}}" class="btn">Buy {{product.name}}</a>'
       expanded = expand(html, products: [product])
-      expect(expanded).to eq(%(<a href="#{product.long_url}?wanted=true" class="btn">Buy Beautiful films widget</a>))
+      expect(expanded).to eq(%(<a href="#{UrlService.domain_with_protocol}/checkout?product=#{product.unique_permalink}" class="btn">Buy Beautiful films widget</a>))
     end
 
     it "supports whitespace inside the braces" do
@@ -127,9 +127,9 @@ describe Pages::TemplateExpander do
       expect(expand("{{product.variants[0].description}}", products: [product])).to eq("Native macOS app")
     end
 
-    it "expands product.variants[N].checkout_url to the long_url with wanted=true and the variant's option" do
-      expect(expand("{{product.variants[0].checkout_url}}", products: [product])).to eq("#{product.long_url}?wanted=true&option=freeext")
-      expect(expand("{{product.variants[1].checkout_url}}", products: [product])).to eq("#{product.long_url}?wanted=true&option=proext")
+    it "expands product.variants[N].checkout_url to the canonical /checkout URL with the variant's option" do
+      expect(expand("{{product.variants[0].checkout_url}}", products: [product])).to eq("#{UrlService.domain_with_protocol}/checkout?product=#{product.unique_permalink}&option=freeext")
+      expect(expand("{{product.variants[1].checkout_url}}", products: [product])).to eq("#{UrlService.domain_with_protocol}/checkout?product=#{product.unique_permalink}&option=proext")
     end
 
     it "applies a non-zero base price when computing variant.price" do
