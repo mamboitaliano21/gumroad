@@ -1,0 +1,66 @@
+<section class="bg-black text-white px-6 py-32 text-center">
+  <h1 class="text-7xl md:text-8xl font-bold tracking-tight">{{product.name}}</h1>
+  <p class="mt-6 text-2xl md:text-3xl text-gray-300 max-w-3xl mx-auto">
+    Native macOS app. Transcribe anything in seconds.
+  </p>
+  <a href="{{product.variants[1].checkout_url}}"
+     class="mt-12 inline-block bg-white text-black text-lg px-10 py-4 rounded-full font-medium hover:bg-gray-200">
+    Buy from {{product.variants[1].price}}
+  </a>
+  <p class="mt-4 text-sm text-gray-500">Or download the free version.</p>
+</section>
+
+<section class="grid grid-cols-1 md:grid-cols-2 gap-2 px-6 py-16 bg-gray-50">
+  <img src="{{product.covers[0].url}}" alt="MacWhisper screenshot" class="w-full rounded-lg" />
+  <img src="{{product.covers[1].url}}" alt="MacWhisper transcription view" class="w-full rounded-lg" />
+</section>
+
+<section class="px-6 py-24 max-w-6xl mx-auto">
+  <h2 class="text-4xl md:text-5xl font-bold text-center mb-16">One payment. Yours forever.</h2>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="border border-gray-200 rounded-2xl p-8 flex flex-col">
+      <h3 class="text-xl font-semibold">{{product.variants[0].name}}</h3>
+      <p class="text-4xl font-bold mt-4">{{product.variants[0].price}}</p>
+      <p class="text-sm text-gray-600 mt-6 flex-1">
+        {{product.variants[0].description}}
+      </p>
+      <a href="{{product.variants[0].checkout_url}}"
+         class="mt-8 block text-center border border-black text-black px-6 py-3 rounded-full font-medium hover:bg-black hover:text-white">
+        Get free
+      </a>
+    </div>
+    <div class="border-2 border-black rounded-2xl p-8 flex flex-col bg-black text-white">
+      <h3 class="text-xl font-semibold">{{product.variants[1].name}}</h3>
+      <p class="text-4xl font-bold mt-4">{{product.variants[1].price}}</p>
+      <p class="text-sm text-gray-300 mt-6 flex-1">
+        {{product.variants[1].description}}
+      </p>
+      <a href="{{product.variants[1].checkout_url}}"
+         class="mt-8 block text-center bg-white text-black px-6 py-3 rounded-full font-medium hover:bg-gray-200">
+        Buy Pro
+      </a>
+    </div>
+    <div class="border border-gray-200 rounded-2xl p-8 flex flex-col">
+      <h3 class="text-xl font-semibold">{{product.variants[2].name}}</h3>
+      <p class="text-4xl font-bold mt-4">{{product.variants[2].price}}</p>
+      <p class="text-sm text-gray-600 mt-6 flex-1">
+        {{product.variants[2].description}}
+      </p>
+      <a href="{{product.variants[2].checkout_url}}"
+         class="mt-8 block text-center border border-black text-black px-6 py-3 rounded-full font-medium hover:bg-black hover:text-white">
+        Buy team
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="bg-black text-white px-6 py-24 text-center">
+  <h2 class="text-4xl md:text-5xl font-bold">Stop paying monthly.</h2>
+  <p class="mt-6 text-xl text-gray-300 max-w-2xl mx-auto">
+    One payment, yours forever. No subscriptions, no cloud uploads.
+  </p>
+  <a href="{{product.variants[1].checkout_url}}"
+     class="mt-12 inline-block bg-white text-black text-lg px-10 py-4 rounded-full font-medium hover:bg-gray-200">
+    Buy {{product.name}}
+  </a>
+</section>
