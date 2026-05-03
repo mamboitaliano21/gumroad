@@ -101,8 +101,8 @@ describe Pages::TemplateExpander do
       cover_b = double("AssetPreview", url: "https://cdn.example.com/cover-b.png")
       allow(product).to receive(:display_asset_previews).and_return([cover_a, cover_b])
 
-      free = double("Variant", name: "MacWhisper Free", description: "Native macOS app", price_difference_cents: 0)
-      pro = double("Variant", name: "MacWhisper Pro", description: "1 Pro license", price_difference_cents: 6400)
+      free = double("Variant", name: "MacWhisper Free", description: "Native macOS app", price_difference_cents: 0, external_id: "freeext")
+      pro = double("Variant", name: "MacWhisper Pro", description: "1 Pro license", price_difference_cents: 6400, external_id: "proext")
       relation = double("ActiveRecord::Relation")
       allow(relation).to receive(:in_order).and_return([free, pro])
       allow(product).to receive(:alive_variants).and_return(relation)
@@ -127,6 +127,11 @@ describe Pages::TemplateExpander do
       expect(expand("{{product.variants[0].description}}", products: [product])).to eq("Native macOS app")
     end
 
+    it "expands product.variants[N].checkout_url to the long_url with wanted=true and the variant's option" do
+      expect(expand("{{product.variants[0].checkout_url}}", products: [product])).to eq("#{product.long_url}?wanted=true&option=freeext")
+      expect(expand("{{product.variants[1].checkout_url}}", products: [product])).to eq("#{product.long_url}?wanted=true&option=proext")
+    end
+
     it "applies a non-zero base price when computing variant.price" do
       paid_product = create(:product, user: seller, price_cents: 500, price_currency_type: "usd")
       pro = double("Variant", name: "Pro", description: "x", price_difference_cents: 6400)
@@ -144,6 +149,7 @@ describe Pages::TemplateExpander do
       expect(expand("{{product.variants[99].name}}", products: [product])).to eq("")
       expect(expand("{{product.variants[99].price}}", products: [product])).to eq("")
       expect(expand("{{product.variants[99].description}}", products: [product])).to eq("")
+      expect(expand("{{product.variants[99].checkout_url}}", products: [product])).to eq("")
     end
 
     it "HTML-escapes variant.name and variant.description text values" do
@@ -171,6 +177,10 @@ describe Pages::TemplateExpander do
 
     it "expands product.variants[N].description to an empty string" do
       expect(expand("{{product.variants[0].description}}", products: [])).to eq("")
+    end
+
+    it "expands product.variants[N].checkout_url to an empty string" do
+      expect(expand("{{product.variants[0].checkout_url}}", products: [])).to eq("")
     end
   end
 

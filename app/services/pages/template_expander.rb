@@ -47,6 +47,7 @@ module Pages
         in ["product", "variants", Integer => i, "name"] then escape(variants[i]&.name)
         in ["product", "variants", Integer => i, "price"] then escape(format_variant_price(variants[i]))
         in ["product", "variants", Integer => i, "description"] then escape(variants[i]&.description)
+        in ["product", "variants", Integer => i, "checkout_url"] then variant_checkout_url(variants[i])
         in ["seller", "name"] then escape(@product&.user&.name.presence || @product&.user&.username)
         in ["seller", "username"] then escape(@product&.user&.username)
         in ["seller", "avatar_url"] then @product&.user&.avatar_url.to_s
@@ -90,6 +91,13 @@ module Pages
         return "" unless @product
         url = @product.long_url
         url.include?("?") ? "#{url}&wanted=true" : "#{url}?wanted=true"
+      end
+
+      def variant_checkout_url(variant)
+        return "" unless @product && variant
+        url = @product.long_url
+        separator = url.include?("?") ? "&" : "?"
+        "#{url}#{separator}wanted=true&option=#{variant.external_id}"
       end
   end
 end
