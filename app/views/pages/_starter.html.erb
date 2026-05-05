@@ -1,0 +1,114 @@
+<div class="min-h-screen bg-[#FFDE59] font-mono text-black">
+  <header class="border-b-4 border-black p-4 bg-white">
+    <div class="container mx-auto flex justify-between items-center gap-4">
+      <div class="text-2xl font-black uppercase truncate"><%= product.name %></div>
+      <a href="<%= primary_cta_href %>" target="<%= primary_cta_target %>" class="bg-[#FF3366] text-white font-bold px-4 py-2 border-4 border-black shadow-[4px_4px_0px_0px_#000] hover:shadow-[2px_2px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] transition-all">
+        Buy now
+      </a>
+    </div>
+  </header>
+
+  <section class="py-16 px-4">
+    <div class="container mx-auto">
+      <div class="grid <%= cover_url.present? ? "md:grid-cols-2" : "" %> gap-8 items-center">
+        <div class="space-y-6">
+          <% if byline.present? %>
+            <div class="inline-block bg-[#00FFCA] px-4 py-2 border-4 border-black font-bold rotate-[-2deg] uppercase">
+              <%= byline %>
+            </div>
+          <% end %>
+          <h1 class="text-5xl md:text-7xl font-black leading-tight"><%= product.name %></h1>
+          <% if description_paragraphs.first.present? %>
+            <p class="text-xl border-l-4 border-black pl-4 leading-relaxed">
+              <%= description_paragraphs.first %>
+            </p>
+          <% end %>
+          <div class="flex flex-wrap gap-4 pt-4">
+            <a href="<%= primary_cta_href %>" target="<%= primary_cta_target %>" class="bg-black text-white font-bold text-lg border-4 border-black px-8 py-6 shadow-[8px_8px_0px_0px_#FF3366] hover:shadow-[4px_4px_0px_0px_#FF3366] hover:translate-x-[4px] hover:translate-y-[4px] transition-all inline-block">
+              <%= primary_cta_label %> ➔
+            </a>
+            <% if description_paragraphs.any? %>
+              <a href="#about" class="bg-white font-bold text-lg border-4 border-black px-8 py-6 shadow-[8px_8px_0px_0px_#000] hover:shadow-[4px_4px_0px_0px_#000] hover:translate-x-[4px] hover:translate-y-[4px] transition-all inline-block">
+                Learn more
+              </a>
+            <% end %>
+          </div>
+        </div>
+        <% if cover_url.present? %>
+          <div class="relative">
+            <div class="absolute inset-0 bg-[#FF3366] translate-x-4 translate-y-4 border-4 border-black"></div>
+            <div class="relative border-4 border-black bg-white p-4">
+              <img src="<%= cover_url %>" alt="<%= product.name %>" class="w-full h-auto border-2 border-black" />
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </section>
+
+  <% if description_paragraphs.any? %>
+    <section id="about" class="py-16 px-4 bg-[#00FFCA] border-y-4 border-black">
+      <div class="container mx-auto max-w-3xl">
+        <h2 class="text-4xl md:text-5xl font-black mb-12 text-center">
+          <span class="bg-white px-4 py-2 border-4 border-black inline-block -rotate-1">ABOUT</span>
+        </h2>
+        <div class="space-y-6 text-lg leading-relaxed">
+          <% description_paragraphs.each do |paragraph| %>
+            <p><%= paragraph %></p>
+          <% end %>
+        </div>
+      </div>
+    </section>
+  <% end %>
+
+  <section id="pricing" class="py-16 px-4">
+    <div class="container mx-auto">
+      <h2 class="text-4xl md:text-5xl font-black mb-12 text-center">
+        <span class="bg-[#FF3366] text-white px-4 py-2 border-4 border-black inline-block rotate-1">
+          <%= variants.any? ? "PICK A TIER" : "PRICING" %>
+        </span>
+      </h2>
+      <% if variants.any? %>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          <% variants.each do |variant| %>
+            <div class="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_#000] flex flex-col gap-4">
+              <h3 class="text-2xl font-black"><%= variant[:name] %></h3>
+              <div class="text-4xl font-black"><%= variant[:formatted_price] %></div>
+              <a href="<%= variant[:checkout_url] %>" target="_top" class="mt-auto bg-black text-white font-bold border-4 border-black px-6 py-4 text-center shadow-[6px_6px_0px_0px_#FF3366] hover:shadow-[3px_3px_0px_0px_#FF3366] hover:translate-x-[3px] hover:translate-y-[3px] transition-all">
+                Buy <%= variant[:name] %> ➔
+              </a>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="max-w-3xl mx-auto bg-white border-4 border-black p-8 shadow-[12px_12px_0px_0px_#000]">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+            <div>
+              <h3 class="text-3xl font-black"><%= product.name %></h3>
+            </div>
+            <div class="text-5xl font-black"><%= formatted_price %></div>
+          </div>
+          <a href="<%= checkout_url %>" target="_top" class="block w-full bg-black text-white font-bold text-lg border-4 border-black px-8 py-6 text-center shadow-[8px_8px_0px_0px_#FF3366] hover:shadow-[4px_4px_0px_0px_#FF3366] hover:translate-x-[4px] hover:translate-y-[4px] transition-all">
+            Get instant access ➔
+          </a>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+  <section class="py-16 px-4 bg-[#FFDE59] border-t-4 border-black">
+    <div class="container mx-auto max-w-4xl text-center">
+      <h2 class="text-4xl md:text-6xl font-black mb-6">Ready to get started?</h2>
+      <a href="<%= primary_cta_href %>" target="<%= primary_cta_target %>" class="bg-black text-white font-bold text-xl border-4 border-black px-10 py-8 shadow-[8px_8px_0px_0px_#FF3366] hover:shadow-[4px_4px_0px_0px_#FF3366] hover:translate-x-[4px] hover:translate-y-[4px] transition-all inline-block">
+        <%= variants.any? ? "Pick a tier" : "Get #{product.name}" %> ➔
+      </a>
+    </div>
+  </section>
+
+  <footer class="bg-black text-white py-8 px-4 border-t-4 border-[#FF3366]">
+    <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="text-xl font-black uppercase truncate"><%= product.name %></div>
+      <a href="https://gumroad.com" target="_top" class="hover:text-[#FFDE59]">Powered by Gumroad</a>
+    </div>
+  </footer>
+</div>

@@ -77,12 +77,39 @@ class PagesController < Sellers::BaseController
 
     def starter_html_for(product)
       checkout_url = "/checkout?product=#{product.unique_permalink}"
-      <<~HTML
-        <main class="mx-auto max-w-2xl p-8 text-center">
-          <h1 class="text-4xl font-bold">#{ERB::Util.html_escape(product.name)}</h1>
-          <p class="mt-4 text-lg text-gray-700">Edit this HTML to design your product page.</p>
-          <a href="#{checkout_url}" target="_top" class="mt-8 inline-block rounded bg-black px-6 py-3 text-white">Buy now</a>
-        </main>
-      HTML
+      currency = product.price_currency_type.to_sym
+      variants = product.alive_variants.map do |variant|
+        {
+          name: variant.name,
+          formatted_price: MoneyFormatter.format(product.price_cents + variant.price_difference_cents, currency, no_cents_if_whole: true, symbol: true),
+          checkout_url: "#{checkout_url}&option=#{variant.external_id}"
+        }
+      end
+      primary_cta_href = variants.any? ? "#pricing" : checkout_url
+      primary_cta_target = variants.any? ? "_self" : "_top"
+      primary_cta_label = variants.any? ? "Pick a tier" : "Get it for #{MoneyFormatter.format(product.price_cents, currency, no_cents_if_whole: true, symbol: true)}"
+
+      render_to_string(
+        partial: "pages/starter",
+        locals: {
+          product:,
+          checkout_url:,
+          formatted_price: MoneyFormatter.format(product.price_cents, currency, no_cents_if_whole: true, symbol: true),
+          cover_url: product.thumbnail_or_cover_url,
+          description_paragraphs: description_paragraphs_for(product),
+          variants:,
+          byline: product.user.name_or_username.presence,
+          primary_cta_href:,
+          primary_cta_target:,
+          primary_cta_label:
+        }
+      )
+    end
+
+    def description_paragraphs_for(product)
+      return [] if product.description.blank?
+      fragment = Nokogiri::HTML.fragment(product.description)
+      paragraphs = fragment.search("p, div, li").map { |n| n.text.strip }.reject(&:blank?)
+      paragraphs.presence || [fragment.text.strip].reject(&:blank?)
     end
 end

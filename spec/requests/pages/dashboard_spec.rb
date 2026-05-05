@@ -44,13 +44,32 @@ describe "Pages dashboard", type: :request do
 
   describe "GET /pages/new" do
     it "pre-fills starter HTML when ?product=PERMALINK is provided" do
-      product = create(:product, user: seller, name: "Demo")
+      product = create(:product, user: seller, name: "Demo", price_cents: 4900, description: "<p>Line one.</p><p>Line two.</p>")
       get "/pages/new", params: { product: product.unique_permalink }, headers: { "X-Inertia" => "true" }
       expect(response).to have_http_status(:ok)
       props = JSON.parse(response.body)["props"]
       expect(props["starter_html"]).to include("/checkout?product=#{product.unique_permalink}")
       expect(props["starter_html"]).to include("target=\"_top\"")
+      expect(props["starter_html"]).to include("$49")
+      expect(props["starter_html"]).to include("Line one.")
+      expect(props["starter_html"]).to include("Line two.")
       expect(props["starter_title"]).to eq("Demo")
+    end
+
+    it "renders a per-variant pricing card when the product has alive variants" do
+      product = create(:product, user: seller, name: "Tiered", price_cents: 1000)
+      category = create(:variant_category, link: product, title: "Tier")
+      basic = create(:variant, variant_category: category, name: "Basic", price_difference_cents: 0)
+      pro = create(:variant, variant_category: category, name: "Pro", price_difference_cents: 5000)
+      get "/pages/new", params: { product: product.unique_permalink }, headers: { "X-Inertia" => "true" }
+      expect(response).to have_http_status(:ok)
+      starter_html = JSON.parse(response.body)["props"]["starter_html"]
+      expect(starter_html).to include("Basic")
+      expect(starter_html).to include("Pro")
+      expect(starter_html).to include("option=#{basic.external_id}")
+      expect(starter_html).to include("option=#{pro.external_id}")
+      expect(starter_html).to include("$10")
+      expect(starter_html).to include("$60")
     end
   end
 
