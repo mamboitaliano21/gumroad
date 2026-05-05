@@ -18,7 +18,7 @@ module Pages
       authorize Page
 
       starter_html = ""
-      starter_title = "Untitled page"
+      starter_title = ""
       if params[:product].present?
         product = current_seller.products.find_by(unique_permalink: params[:product])
         if product

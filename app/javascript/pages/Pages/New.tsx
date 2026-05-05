@@ -19,20 +19,33 @@ export default function PagesNew({ starter_html, starter_title }: PagesNewProps)
     page: { title: starter_title, raw_html: starter_html },
   });
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSubmit = (event?: React.FormEvent<HTMLFormElement>) => {
+    event?.preventDefault();
     form.post("/pages");
   };
 
   return (
     <div>
-      <PageHeader title="New page" actions={<NavigationButtonInertia href="/pages">Cancel</NavigationButtonInertia>} />
-      <form onSubmit={handleSubmit} className="p-4 lg:p-8">
+      <PageHeader
+        title="New page"
+        actions={
+          <>
+            <NavigationButtonInertia href="/pages" disabled={form.processing}>
+              Cancel
+            </NavigationButtonInertia>
+            <Button color="accent" onClick={() => handleSubmit()} disabled={form.processing}>
+              {form.processing ? "Creating…" : "Create page"}
+            </Button>
+          </>
+        }
+      />
+      <form onSubmit={handleSubmit} className="grid gap-8 p-4 md:p-8">
         <Fieldset state={form.errors["page.title"] ? "danger" : undefined}>
           <Label htmlFor="page-title">Title</Label>
           <Input
             id="page-title"
             type="text"
+            placeholder="Title"
             value={form.data.page.title}
             onChange={(e) => form.setData("page", { ...form.data.page, title: e.target.value })}
             required
@@ -42,15 +55,12 @@ export default function PagesNew({ starter_html, starter_title }: PagesNewProps)
           <Label htmlFor="page-raw-html">HTML</Label>
           <Textarea
             id="page-raw-html"
-            rows={20}
+            rows={10}
             value={form.data.page.raw_html}
             onChange={(e) => form.setData("page", { ...form.data.page, raw_html: e.target.value })}
             required
           />
         </Fieldset>
-        <Button type="submit" color="accent" disabled={form.processing}>
-          {form.processing ? "Saving…" : "Create page"}
-        </Button>
       </form>
     </div>
   );

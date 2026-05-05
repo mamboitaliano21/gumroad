@@ -1,8 +1,12 @@
+import { DotsHorizontalRounded, Pencil, Trash } from "@boxicons/react";
 import { router } from "@inertiajs/react";
+import { formatDistanceToNow } from "date-fns";
 import * as React from "react";
 
 import { Button } from "$app/components/Button";
 import { NavigationButtonInertia } from "$app/components/NavigationButton";
+import { Popover, PopoverContent, PopoverTrigger } from "$app/components/Popover";
+import { Menu, MenuItem } from "$app/components/ui/Menu";
 import { PageHeader } from "$app/components/ui/PageHeader";
 import { Placeholder } from "$app/components/ui/Placeholder";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$app/components/ui/Table";
@@ -20,9 +24,10 @@ type PagesIndexProps = {
 };
 
 export default function PagesIndex({ pages }: PagesIndexProps) {
+  const [openPopoverId, setOpenPopoverId] = React.useState<number | null>(null);
+
   const handleDelete = (id: number) => {
-    // eslint-disable-next-line no-alert
-    if (!window.confirm("Delete this page?")) return;
+    setOpenPopoverId(null);
     router.delete(`/pages/${id}`);
   };
 
@@ -36,7 +41,7 @@ export default function PagesIndex({ pages }: PagesIndexProps) {
           </NavigationButtonInertia>
         }
       />
-      <div className="p-4 lg:p-8">
+      <div className="p-4 md:p-8">
         {pages.length === 0 ? (
           <Placeholder>
             <h2>No pages yet</h2>
@@ -56,20 +61,39 @@ export default function PagesIndex({ pages }: PagesIndexProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {pages.map((page) => (
-                <TableRow key={page.id}>
-                  <TableCell>{page.title}</TableCell>
+              {pages.map((row) => (
+                <TableRow key={row.id}>
+                  <TableCell>{row.title.trim() === "" ? "Untitled" : row.title}</TableCell>
                   <TableCell>
-                    <a href={page.public_url} target="_blank" rel="noopener noreferrer">
-                      {page.public_url}
+                    <a href={row.public_url} target="_blank" rel="noopener noreferrer">
+                      {row.public_url}
                     </a>
                   </TableCell>
-                  <TableCell>{new Date(page.updated_at).toLocaleString()}</TableCell>
+                  <TableCell className="whitespace-nowrap">{formatDistanceToNow(row.updated_at)} ago</TableCell>
                   <TableCell>
-                    <NavigationButtonInertia href={`/pages/${page.id}/edit`}>Edit</NavigationButtonInertia>
-                    <Button onClick={() => handleDelete(page.id)} color="danger">
-                      Delete
-                    </Button>
+                    <div className="flex flex-wrap gap-3 lg:justify-end">
+                      <NavigationButtonInertia href={`/pages/${row.id}/edit`} size="icon" aria-label="Edit">
+                        <Pencil className="size-5" />
+                      </NavigationButtonInertia>
+                      <Popover
+                        open={openPopoverId === row.id}
+                        onOpenChange={(open) => setOpenPopoverId(open ? row.id : null)}
+                      >
+                        <PopoverTrigger asChild>
+                          <Button size="icon" aria-label="Open page action menu">
+                            <DotsHorizontalRounded className="size-5" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent sideOffset={4} className="border-0 p-0 shadow-none" usePortal>
+                          <Menu>
+                            <MenuItem variant="danger" onClick={() => handleDelete(row.id)}>
+                              <Trash className="size-5" />
+                              Delete
+                            </MenuItem>
+                          </Menu>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

@@ -26,8 +26,8 @@ export default function PagesEdit({ page }: PagesEditProps) {
     page: { title: page.title, raw_html: page.raw_html },
   });
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSubmit = (event?: React.FormEvent<HTMLFormElement>) => {
+    event?.preventDefault();
     form.patch(`/pages/${page.id}`);
   };
 
@@ -37,19 +37,28 @@ export default function PagesEdit({ page }: PagesEditProps) {
         title="Edit page"
         actions={
           <>
-            <NavigationButtonInertia href={page.public_url} target="_blank" rel="noopener noreferrer">
-              View page
+            <NavigationButtonInertia href="/pages" disabled={form.processing}>
+              Cancel
             </NavigationButtonInertia>
-            <NavigationButtonInertia href="/pages">Back</NavigationButtonInertia>
+            <Button color="accent" onClick={() => handleSubmit()} disabled={form.processing}>
+              {form.processing ? "Saving…" : "Save changes"}
+            </Button>
           </>
         }
       />
-      <form onSubmit={handleSubmit} className="p-4 lg:p-8">
+      <form onSubmit={handleSubmit} className="grid gap-8 p-4 md:p-8">
+        <div className="text-sm text-muted">
+          Visible at{" "}
+          <a href={page.public_url} target="_blank" rel="noopener noreferrer">
+            {page.public_url}
+          </a>
+        </div>
         <Fieldset state={form.errors["page.title"] ? "danger" : undefined}>
           <Label htmlFor="page-title">Title</Label>
           <Input
             id="page-title"
             type="text"
+            placeholder="Title"
             value={form.data.page.title}
             onChange={(e) => form.setData("page", { ...form.data.page, title: e.target.value })}
             required
@@ -59,15 +68,12 @@ export default function PagesEdit({ page }: PagesEditProps) {
           <Label htmlFor="page-raw-html">HTML</Label>
           <Textarea
             id="page-raw-html"
-            rows={20}
+            rows={10}
             value={form.data.page.raw_html}
             onChange={(e) => form.setData("page", { ...form.data.page, raw_html: e.target.value })}
             required
           />
         </Fieldset>
-        <Button type="submit" color="accent" disabled={form.processing}>
-          {form.processing ? "Saving…" : "Save"}
-        </Button>
       </form>
     </div>
   );
