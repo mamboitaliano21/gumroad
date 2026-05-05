@@ -85,9 +85,6 @@ class PagesController < Sellers::BaseController
           checkout_url: "#{checkout_url}&option=#{variant.external_id}"
         }
       end
-      primary_cta_href = variants.any? ? "#pricing" : checkout_url
-      primary_cta_target = variants.any? ? "_self" : "_top"
-      primary_cta_label = variants.any? ? "Pick a tier" : "Get it for #{MoneyFormatter.format(product.price_cents, currency, no_cents_if_whole: true, symbol: true)}"
 
       render_to_string(
         partial: "pages/starter",
@@ -98,10 +95,7 @@ class PagesController < Sellers::BaseController
           cover_url: product.thumbnail_or_cover_url,
           description_paragraphs: description_paragraphs_for(product),
           variants:,
-          byline: product.user.name_or_username.presence,
-          primary_cta_href:,
-          primary_cta_target:,
-          primary_cta_label:
+          byline: product.user.name_or_username.presence
         }
       )
     end

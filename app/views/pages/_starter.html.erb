@@ -2,7 +2,7 @@
   <header class="border-b-4 border-black p-4 bg-white">
     <div class="container mx-auto flex justify-between items-center gap-4">
       <div class="text-2xl font-black uppercase truncate"><%= product.name %></div>
-      <a href="<%= primary_cta_href %>" target="<%= primary_cta_target %>" class="bg-[#FF3366] text-white font-bold px-4 py-2 border-4 border-black shadow-[4px_4px_0px_0px_#000] hover:shadow-[2px_2px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] transition-all">
+      <a href="<%= checkout_url %>" target="_top" class="bg-[#FF3366] text-white font-bold px-4 py-2 border-4 border-black shadow-[4px_4px_0px_0px_#000] hover:shadow-[2px_2px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] transition-all">
         Buy now
       </a>
     </div>
@@ -24,8 +24,8 @@
             </p>
           <% end %>
           <div class="flex flex-wrap gap-4 pt-4">
-            <a href="<%= primary_cta_href %>" target="<%= primary_cta_target %>" class="bg-black text-white font-bold text-lg border-4 border-black px-8 py-6 shadow-[8px_8px_0px_0px_#FF3366] hover:shadow-[4px_4px_0px_0px_#FF3366] hover:translate-x-[4px] hover:translate-y-[4px] transition-all inline-block">
-              <%= primary_cta_label %> ➔
+            <a href="<%= checkout_url %>" target="_top" class="bg-black text-white font-bold text-lg border-4 border-black px-8 py-6 shadow-[8px_8px_0px_0px_#FF3366] hover:shadow-[4px_4px_0px_0px_#FF3366] hover:translate-x-[4px] hover:translate-y-[4px] transition-all inline-block">
+              Buy <%= product.name %> ➔
             </a>
             <% if description_paragraphs.any? %>
               <a href="#about" class="bg-white font-bold text-lg border-4 border-black px-8 py-6 shadow-[8px_8px_0px_0px_#000] hover:shadow-[4px_4px_0px_0px_#000] hover:translate-x-[4px] hover:translate-y-[4px] transition-all inline-block">
@@ -99,8 +99,8 @@
   <section class="py-16 px-4 bg-[#FFDE59] border-t-4 border-black">
     <div class="container mx-auto max-w-4xl text-center">
       <h2 class="text-4xl md:text-6xl font-black mb-6">Ready to get started?</h2>
-      <a href="<%= primary_cta_href %>" target="<%= primary_cta_target %>" class="bg-black text-white font-bold text-xl border-4 border-black px-10 py-8 shadow-[8px_8px_0px_0px_#FF3366] hover:shadow-[4px_4px_0px_0px_#FF3366] hover:translate-x-[4px] hover:translate-y-[4px] transition-all inline-block">
-        <%= variants.any? ? "Pick a tier" : "Get #{product.name}" %> ➔
+      <a href="<%= checkout_url %>" target="_top" class="bg-black text-white font-bold text-xl border-4 border-black px-10 py-8 shadow-[8px_8px_0px_0px_#FF3366] hover:shadow-[4px_4px_0px_0px_#FF3366] hover:translate-x-[4px] hover:translate-y-[4px] transition-all inline-block">
+        Get <%= product.name %> ➔
       </a>
     </div>
   </section>
