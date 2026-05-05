@@ -16,23 +16,18 @@ class Page < ApplicationRecord
   before_validation :set_permalink
   before_save :sanitize_and_compile, if: :raw_html_changed?
 
-  def self.generate_unique_permalink(max_retries: 10)
-    retries = 0
-    candidate = SecureRandom.alphanumeric(8).downcase
-
-    while exists?(permalink: candidate)
-      retries += 1
-      raise "Failed to generate unique permalink after #{max_retries} attempts" if retries >= max_retries
-
-      candidate = SecureRandom.alphanumeric(8).downcase
-    end
-
-    candidate
-  end
-
   private
     def set_permalink
-      self.permalink ||= self.class.generate_unique_permalink
+      self.permalink ||= generate_unique_permalink
+    end
+
+    def generate_unique_permalink
+      chars = ("a".."z").to_a
+      candidate = chars.sample
+      while self.class.exists?(permalink: candidate)
+        candidate += chars.sample
+      end
+      candidate
     end
 
     def sanitize_and_compile

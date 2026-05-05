@@ -33,17 +33,10 @@ describe Page do
       expect(page.permalink).to be_present
     end
 
-    it "retries on collision until finding a unique permalink" do
-      allow(SecureRandom).to receive(:alphanumeric).and_return("existing", "uniquev2")
-      create(:page, permalink: "existing")
-      expect(Page.generate_unique_permalink).to eq("uniquev2")
-    end
-
-    it "raises after max retries" do
-      allow(SecureRandom).to receive(:alphanumeric).and_return("existing")
-      create(:page, permalink: "existing")
-      expect { Page.generate_unique_permalink(max_retries: 3) }
-        .to raise_error("Failed to generate unique permalink after 3 attempts")
+    it "appends another character when single-char candidates are exhausted" do
+      ("a".."z").each { |c| create(:page, permalink: c) }
+      page = create(:page, permalink: nil)
+      expect(page.permalink.length).to be >= 2
     end
 
     it "enforces uniqueness at the model layer" do
