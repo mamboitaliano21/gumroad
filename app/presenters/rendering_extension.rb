@@ -113,6 +113,9 @@ module RenderingExtension
         },
         churn: {
           show: Pundit.policy!(pundit_user, :churn).show?,
+        },
+        page: {
+          index: Pundit.policy!(pundit_user, Page).index?,
         }
       }
     end

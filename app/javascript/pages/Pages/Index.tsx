@@ -3,6 +3,7 @@ import * as React from "react";
 
 import { Button } from "$app/components/Button";
 import { NavigationButtonInertia } from "$app/components/NavigationButton";
+import { PageHeader } from "$app/components/ui/PageHeader";
 import { Placeholder } from "$app/components/ui/Placeholder";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$app/components/ui/Table";
 
@@ -26,16 +27,16 @@ export default function PagesIndex({ pages }: PagesIndexProps) {
   };
 
   return (
-    <main>
-      <header>
-        <h1>Pages</h1>
-        <div className="actions">
+    <div>
+      <PageHeader
+        title="Pages"
+        actions={
           <NavigationButtonInertia color="accent" href="/pages/new">
             New page
           </NavigationButtonInertia>
-        </div>
-      </header>
-      <section>
+        }
+      />
+      <div className="p-4 lg:p-8">
         {pages.length === 0 ? (
           <Placeholder>
             <h2>No pages yet</h2>
@@ -75,7 +76,7 @@ export default function PagesIndex({ pages }: PagesIndexProps) {
             </TableBody>
           </Table>
         )}
-      </section>
-    </main>
+      </div>
+    </div>
   );
 }

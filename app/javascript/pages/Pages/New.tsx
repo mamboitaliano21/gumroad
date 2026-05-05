@@ -6,6 +6,7 @@ import { NavigationButtonInertia } from "$app/components/NavigationButton";
 import { Fieldset } from "$app/components/ui/Fieldset";
 import { Input } from "$app/components/ui/Input";
 import { Label } from "$app/components/ui/Label";
+import { PageHeader } from "$app/components/ui/PageHeader";
 import { Textarea } from "$app/components/ui/Textarea";
 
 type PagesNewProps = {
@@ -24,14 +25,9 @@ export default function PagesNew({ starter_html, starter_title }: PagesNewProps)
   };
 
   return (
-    <main>
-      <header>
-        <h1>New page</h1>
-        <div className="actions">
-          <NavigationButtonInertia href="/pages">Cancel</NavigationButtonInertia>
-        </div>
-      </header>
-      <form onSubmit={handleSubmit}>
+    <div>
+      <PageHeader title="New page" actions={<NavigationButtonInertia href="/pages">Cancel</NavigationButtonInertia>} />
+      <form onSubmit={handleSubmit} className="p-4 lg:p-8">
         <Fieldset state={form.errors["page.title"] ? "danger" : undefined}>
           <Label htmlFor="page-title">Title</Label>
           <Input
@@ -56,6 +52,6 @@ export default function PagesNew({ starter_html, starter_title }: PagesNewProps)
           {form.processing ? "Saving…" : "Create page"}
         </Button>
       </form>
-    </main>
+    </div>
   );
 }

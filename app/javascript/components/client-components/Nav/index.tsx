@@ -162,11 +162,13 @@ export const Nav = (props: Props) => {
           icon={<Workflow pack="filled" className="size-5" />}
           href={Routes.workflows_url(routeParams)}
         />
-        <ClientNavLink
-          text="Pages"
-          icon={<File pack="filled" className="size-5" />}
-          href={Routes.pages_url(routeParams)}
-        />
+        {loggedInUser?.policies.page.index ? (
+          <ClientNavLink
+            text="Pages"
+            icon={<File pack="filled" className="size-5" />}
+            href={Routes.pages_url(routeParams)}
+          />
+        ) : null}
         <ClientNavLink
           text="Sales"
           icon={<DollarCircle pack="filled" className="size-5" />}

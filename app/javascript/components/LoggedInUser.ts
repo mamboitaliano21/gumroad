@@ -68,6 +68,9 @@ type Policies = {
   churn: {
     show: boolean;
   };
+  page: {
+    index: boolean;
+  };
 };
 
 export type LoggedInUser = {

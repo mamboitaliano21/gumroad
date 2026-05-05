@@ -6,6 +6,7 @@ import { NavigationButtonInertia } from "$app/components/NavigationButton";
 import { Fieldset } from "$app/components/ui/Fieldset";
 import { Input } from "$app/components/ui/Input";
 import { Label } from "$app/components/ui/Label";
+import { PageHeader } from "$app/components/ui/PageHeader";
 import { Textarea } from "$app/components/ui/Textarea";
 
 type PageData = {
@@ -31,17 +32,19 @@ export default function PagesEdit({ page }: PagesEditProps) {
   };
 
   return (
-    <main>
-      <header>
-        <h1>Edit page</h1>
-        <div className="actions">
-          <NavigationButtonInertia href={page.public_url} target="_blank" rel="noopener noreferrer">
-            View page
-          </NavigationButtonInertia>
-          <NavigationButtonInertia href="/pages">Back</NavigationButtonInertia>
-        </div>
-      </header>
-      <form onSubmit={handleSubmit}>
+    <div>
+      <PageHeader
+        title="Edit page"
+        actions={
+          <>
+            <NavigationButtonInertia href={page.public_url} target="_blank" rel="noopener noreferrer">
+              View page
+            </NavigationButtonInertia>
+            <NavigationButtonInertia href="/pages">Back</NavigationButtonInertia>
+          </>
+        }
+      />
+      <form onSubmit={handleSubmit} className="p-4 lg:p-8">
         <Fieldset state={form.errors["page.title"] ? "danger" : undefined}>
           <Label htmlFor="page-title">Title</Label>
           <Input
@@ -66,6 +69,6 @@ export default function PagesEdit({ page }: PagesEditProps) {
           {form.processing ? "Saving…" : "Save"}
         </Button>
       </form>
-    </main>
+    </div>
   );
 }
