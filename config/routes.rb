@@ -923,7 +923,7 @@ Rails.application.routes.draw do
     end
 
     # pages
-    resources :pages, controller: "pages/dashboard", only: [:index, :new, :create, :edit, :update, :destroy]
+    resources :pages, only: [:index, :new, :create, :edit, :update, :destroy]
 
     # utm links
     get "/utm_links" => redirect("/dashboard/utm_links")

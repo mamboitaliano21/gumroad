@@ -1,4 +1,4 @@
-import { useForm } from "@inertiajs/react";
+import { useForm, usePage } from "@inertiajs/react";
 import * as React from "react";
 
 import { Button } from "$app/components/Button";
@@ -17,18 +17,19 @@ type PageData = {
   public_url: string;
 };
 
-type PagesEditProps = {
+type Props = {
   page: PageData;
 };
 
-export default function PagesEdit({ page }: PagesEditProps) {
+export default function PagesEdit() {
+  const { page } = usePage<Props>().props;
   const form = useForm({
     page: { title: page.title, raw_html: page.raw_html },
   });
 
   const handleSubmit = (event?: React.FormEvent<HTMLFormElement>) => {
     event?.preventDefault();
-    form.patch(`/pages/${page.id}`);
+    form.patch(Routes.page_path(page.id));
   };
 
   return (
@@ -37,7 +38,7 @@ export default function PagesEdit({ page }: PagesEditProps) {
         title="Edit page"
         actions={
           <>
-            <NavigationButtonInertia href="/pages" disabled={form.processing}>
+            <NavigationButtonInertia href={Routes.pages_path()} disabled={form.processing}>
               Cancel
             </NavigationButtonInertia>
             <Button color="accent" onClick={() => handleSubmit()} disabled={form.processing}>

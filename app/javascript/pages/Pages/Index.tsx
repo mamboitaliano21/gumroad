@@ -1,5 +1,5 @@
 import { DotsHorizontalRounded, Pencil, Trash } from "@boxicons/react";
-import { router } from "@inertiajs/react";
+import { router, usePage } from "@inertiajs/react";
 import { formatDistanceToNow } from "date-fns";
 import * as React from "react";
 
@@ -19,16 +19,17 @@ type PageRow = {
   updated_at: string;
 };
 
-type PagesIndexProps = {
+type Props = {
   pages: PageRow[];
 };
 
-export default function PagesIndex({ pages }: PagesIndexProps) {
+export default function PagesIndex() {
+  const { pages } = usePage<Props>().props;
   const [openPopoverId, setOpenPopoverId] = React.useState<number | null>(null);
 
   const handleDelete = (id: number) => {
     setOpenPopoverId(null);
-    router.delete(`/pages/${id}`);
+    router.delete(Routes.page_path(id));
   };
 
   return (
@@ -36,7 +37,7 @@ export default function PagesIndex({ pages }: PagesIndexProps) {
       <PageHeader
         title="Pages"
         actions={
-          <NavigationButtonInertia color="accent" href="/pages/new">
+          <NavigationButtonInertia color="accent" href={Routes.new_page_path()}>
             New page
           </NavigationButtonInertia>
         }
@@ -46,7 +47,7 @@ export default function PagesIndex({ pages }: PagesIndexProps) {
           <Placeholder>
             <h2>No pages yet</h2>
             <p>Create your first page to publish a custom HTML/Tailwind layout.</p>
-            <NavigationButtonInertia color="accent" href="/pages/new">
+            <NavigationButtonInertia color="accent" href={Routes.new_page_path()}>
               New page
             </NavigationButtonInertia>
           </Placeholder>
@@ -72,7 +73,7 @@ export default function PagesIndex({ pages }: PagesIndexProps) {
                   <TableCell className="whitespace-nowrap">{formatDistanceToNow(row.updated_at)} ago</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-3 lg:justify-end">
-                      <NavigationButtonInertia href={`/pages/${row.id}/edit`} size="icon" aria-label="Edit">
+                      <NavigationButtonInertia href={Routes.edit_page_path(row.id)} size="icon" aria-label="Edit">
                         <Pencil className="size-5" />
                       </NavigationButtonInertia>
                       <Popover

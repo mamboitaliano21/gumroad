@@ -1,4 +1,4 @@
-import { useForm } from "@inertiajs/react";
+import { useForm, usePage } from "@inertiajs/react";
 import * as React from "react";
 
 import { Button } from "$app/components/Button";
@@ -9,19 +9,20 @@ import { Label } from "$app/components/ui/Label";
 import { PageHeader } from "$app/components/ui/PageHeader";
 import { Textarea } from "$app/components/ui/Textarea";
 
-type PagesNewProps = {
+type Props = {
   starter_html: string;
   starter_title: string;
 };
 
-export default function PagesNew({ starter_html, starter_title }: PagesNewProps) {
+export default function PagesNew() {
+  const { starter_html, starter_title } = usePage<Props>().props;
   const form = useForm({
     page: { title: starter_title, raw_html: starter_html },
   });
 
   const handleSubmit = (event?: React.FormEvent<HTMLFormElement>) => {
     event?.preventDefault();
-    form.post("/pages");
+    form.post(Routes.pages_path());
   };
 
   return (
@@ -30,7 +31,7 @@ export default function PagesNew({ starter_html, starter_title }: PagesNewProps)
         title="New page"
         actions={
           <>
-            <NavigationButtonInertia href="/pages" disabled={form.processing}>
+            <NavigationButtonInertia href={Routes.pages_path()} disabled={form.processing}>
               Cancel
             </NavigationButtonInertia>
             <Button color="accent" onClick={() => handleSubmit()} disabled={form.processing}>
