@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= @page.title %></title>
+  <style>
+    html, body { margin: 0; height: 100%; }
+    iframe { border: 0; width: 100%; height: 100vh; display: block; }
+  </style>
+</head>
+<body>
+  <%# Sandbox is the v1 isolation boundary. Do not add allow-scripts or allow-same-origin. %>
+  <iframe sandbox="allow-top-navigation-by-user-activation" srcdoc="<%= page_srcdoc(@page) %>" title="<%= @page.title %>"></iframe>
+</body>
+</html>

@@ -128,6 +128,7 @@ class User < ApplicationRecord
   has_one :refund_policy, -> { where(product_id: nil) }, foreign_key: "seller_id", class_name: "SellerRefundPolicy", dependent: :destroy
   has_one :totp_credential, dependent: :destroy
   has_many :utm_links, dependent: :destroy, foreign_key: :seller_id
+  has_many :pages, foreign_key: :seller_id, dependent: :destroy
   has_many :seller_communities, class_name: "Community", foreign_key: :seller_id, dependent: :destroy
   has_many :community_chat_messages, dependent: :destroy
   has_many :last_read_community_chat_messages, dependent: :destroy

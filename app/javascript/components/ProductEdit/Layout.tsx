@@ -138,7 +138,8 @@ export const Layout = ({
   showBorder?: boolean;
   showNavigationButton?: boolean;
 }) => {
-  const { id, product, updateProduct, uniquePermalink, saving, save, currencyType } = useProductEditContext();
+  const { id, product, updateProduct, uniquePermalink, saving, save, currencyType, pagesEnabled } =
+    useProductEditContext();
   const currentSeller = useCurrentSeller();
   const rootPath = Routes.edit_link_path(uniquePermalink);
 
@@ -249,6 +250,11 @@ export const Layout = ({
         actions={
           product.is_published ? (
             <>
+              {pagesEnabled ? (
+                <NavigationButton href={Routes.new_page_path({ product: uniquePermalink })}>
+                  Create page
+                </NavigationButton>
+              ) : null}
               <Button disabled={isBusy} onClick={() => void setPublished(false)}>
                 {isPublishing ? "Unpublishing..." : "Unpublish"}
               </Button>

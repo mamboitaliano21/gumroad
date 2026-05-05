@@ -14,6 +14,7 @@ import {
   Cart,
   DollarCircle,
   Envelope,
+  File,
   Gift,
   Handshake,
   HomeAlt2,
@@ -160,6 +161,11 @@ export const Nav = (props: Props) => {
           text="Workflows"
           icon={<Workflow pack="filled" className="size-5" />}
           href={Routes.workflows_url(routeParams)}
+        />
+        <ClientNavLink
+          text="Pages"
+          icon={<File pack="filled" className="size-5" />}
+          href={Routes.pages_url(routeParams)}
         />
         <ClientNavLink
           text="Sales"

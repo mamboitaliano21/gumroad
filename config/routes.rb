@@ -837,6 +837,7 @@ Rails.application.routes.draw do
     get "/products", to: "links#index", as: :products
     get "/l/:id", to: "links#show", defaults: { format: "html" }, as: :short_link
     get "/l/:id/:code", to: "links#show", defaults: { format: "html" }, as: :short_link_offer_code
+    get "/p/:permalink", to: "pages/show#show", as: :public_page
     get "/cart_items_count", to: "links#cart_items_count"
 
     get "/products/:id" => redirect("/l/%{id}")
@@ -920,6 +921,9 @@ Rails.application.routes.draw do
         end
       end
     end
+
+    # pages
+    resources :pages, controller: "pages/dashboard", only: [:index, :new, :create, :edit, :update, :destroy]
 
     # utm links
     get "/utm_links" => redirect("/dashboard/utm_links")
