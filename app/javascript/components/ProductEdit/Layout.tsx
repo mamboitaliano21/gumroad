@@ -250,11 +250,6 @@ export const Layout = ({
         actions={
           product.is_published ? (
             <>
-              {pagesEnabled ? (
-                <NavigationButton href={Routes.new_page_path({ product: uniquePermalink })}>
-                  Create page
-                </NavigationButton>
-              ) : null}
               <Button disabled={isBusy} onClick={() => void setPublished(false)}>
                 {isPublishing ? "Unpublishing..." : "Unpublish"}
               </Button>
@@ -269,6 +264,11 @@ export const Layout = ({
                   <CartPlus className="size-5" />
                 </Button>
               </CopyToClipboard>
+              {pagesEnabled ? (
+                <NavigationButton href={Routes.new_page_path({ product: uniquePermalink })}>
+                  Create page
+                </NavigationButton>
+              ) : null}
             </>
           ) : tab === "product" && !isCoffee ? (
             <Button
