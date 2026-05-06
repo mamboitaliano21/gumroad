@@ -23,15 +23,10 @@
               <%= description_paragraphs.first %>
             </p>
           <% end %>
-          <div class="flex flex-wrap gap-4 pt-4">
+          <div class="pt-4">
             <a href="<%= checkout_url %>" target="_top" class="bg-black text-white font-bold text-lg border-4 border-black px-8 py-6 shadow-[8px_8px_0px_0px_#FF3366] hover:shadow-[4px_4px_0px_0px_#FF3366] hover:translate-x-[4px] hover:translate-y-[4px] transition-all inline-block">
               Buy <%= product.name %> ➔
             </a>
-            <% if description_paragraphs.any? %>
-              <a href="#about" class="bg-white font-bold text-lg border-4 border-black px-8 py-6 shadow-[8px_8px_0px_0px_#000] hover:shadow-[4px_4px_0px_0px_#000] hover:translate-x-[4px] hover:translate-y-[4px] transition-all inline-block">
-                Learn more
-              </a>
-            <% end %>
           </div>
         </div>
         <% if cover_url.present? %>
