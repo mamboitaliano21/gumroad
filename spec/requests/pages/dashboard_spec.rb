@@ -79,7 +79,7 @@ describe "Pages dashboard", type: :request do
         post "/pages", params: { page: { title: "T", raw_html: "<div>x</div>" } }
       end.to change(seller.pages, :count).by(1)
       page = seller.pages.last
-      expect(response).to redirect_to(edit_page_path(page))
+      expect(response).to redirect_to(edit_page_path(page.external_id))
     end
 
     it "surfaces inertia validation errors when raw_html is blank" do
@@ -93,16 +93,16 @@ describe "Pages dashboard", type: :request do
   describe "PATCH /pages/:id" do
     it "updates the page" do
       page = create(:page, seller: seller, title: "Old")
-      patch "/pages/#{page.id}", params: { page: { title: "New", raw_html: "<div>y</div>" } }
+      patch "/pages/#{page.external_id}", params: { page: { title: "New", raw_html: "<div>y</div>" } }
       expect(page.reload.title).to eq("New")
-      expect(response).to redirect_to(edit_page_path(page))
+      expect(response).to redirect_to(edit_page_path(page.external_id))
     end
   end
 
   describe "DELETE /pages/:id" do
     it "soft-deletes the page" do
       page = create(:page, seller: seller)
-      delete "/pages/#{page.id}"
+      delete "/pages/#{page.external_id}"
       expect(page.reload).to be_deleted
       expect(response).to redirect_to(pages_path)
     end
@@ -111,7 +111,7 @@ describe "Pages dashboard", type: :request do
   describe "seller scoping" do
     it "returns 404 when accessing another seller's page" do
       other_page = create(:page, seller: create(:user))
-      get "/pages/#{other_page.id}/edit"
+      get "/pages/#{other_page.external_id}/edit"
       expect(response).to have_http_status(:not_found)
     end
   end

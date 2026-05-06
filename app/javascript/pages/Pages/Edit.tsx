@@ -10,7 +10,7 @@ import { PageHeader } from "$app/components/ui/PageHeader";
 import { Textarea } from "$app/components/ui/Textarea";
 
 type PageData = {
-  id: number;
+  id: string;
   title: string;
   permalink: string;
   raw_html: string;

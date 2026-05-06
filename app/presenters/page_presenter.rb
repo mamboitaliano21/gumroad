@@ -9,9 +9,9 @@ class PagePresenter
     @page = page
   end
 
-  def list_props
+  def page_props
     {
-      id: page.id,
+      id: page.external_id,
       title: page.title,
       permalink: page.permalink,
       public_url: public_url,
@@ -22,7 +22,7 @@ class PagePresenter
   def edit_props
     {
       page: {
-        id: page.id,
+        id: page.external_id,
         title: page.title,
         permalink: page.permalink,
         raw_html: page.raw_html.to_s,

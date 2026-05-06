@@ -1,15 +1,20 @@
 # frozen_string_literal: true
 
-class PagesController < Sellers::BaseController
+class PagesController < ApplicationController
+  before_action :authenticate_user!, except: :show
+  after_action :verify_authorized, except: :show
+
+  before_action :apply_pages_csp, only: :show
   before_action :set_page, only: [:edit, :update, :destroy]
 
-  layout "inertia"
+  layout "inertia", except: :show
+  layout false, only: :show
 
   def index
     authorize Page
 
     render inertia: "Pages/Index", props: {
-      pages: -> { current_seller.pages.alive.order(created_at: :desc).map { |p| PagePresenter.new(p).list_props } }
+      pages: current_seller.pages.alive.order(created_at: :desc).map { |p| PagePresenter.new(p).page_props }
     }
   end
 
@@ -37,7 +42,7 @@ class PagesController < Sellers::BaseController
 
     page = current_seller.pages.new(page_params)
     if page.save
-      redirect_to edit_page_path(page), notice: "Page created."
+      redirect_to edit_page_path(page.external_id), notice: "Page created."
     else
       redirect_to new_page_path, alert: page.errors.full_messages.to_sentence, inertia: inertia_errors(page)
     end
@@ -53,9 +58,9 @@ class PagesController < Sellers::BaseController
     authorize @page
 
     if @page.update(page_params)
-      redirect_to edit_page_path(@page), notice: "Page updated."
+      redirect_to edit_page_path(@page.external_id), notice: "Page updated."
     else
-      redirect_to edit_page_path(@page), alert: @page.errors.full_messages.to_sentence, inertia: inertia_errors(@page)
+      redirect_to edit_page_path(@page.external_id), alert: @page.errors.full_messages.to_sentence, inertia: inertia_errors(@page)
     end
   end
 
@@ -66,9 +71,21 @@ class PagesController < Sellers::BaseController
     redirect_to pages_path, notice: "Page deleted."
   end
 
+  def show
+    page = Page.alive.find_by(permalink: params[:permalink])
+    return e404 if page.nil? || !Feature.active?(:pages, page.seller)
+    @page = page
+    render "pages/show/show"
+  end
+
   private
+    def apply_pages_csp
+      use_secure_headers_override(:pages_csp)
+    end
+
     def set_page
-      @page = current_seller.pages.alive.find(params[:id])
+      @page = current_seller.pages.alive.find_by_external_id(params[:id])
+      e404 unless @page
     end
 
     def page_params
@@ -77,11 +94,10 @@ class PagesController < Sellers::BaseController
 
     def starter_html_for(product)
       checkout_url = "/checkout?product=#{product.unique_permalink}"
-      currency = product.price_currency_type.to_sym
       variants = product.alive_variants.map do |variant|
         {
           name: variant.name,
-          formatted_price: MoneyFormatter.format(product.price_cents + variant.price_difference_cents, currency, no_cents_if_whole: true, symbol: true),
+          formatted_price: product.display_price_for_price_cents(product.price_cents + variant.price_difference_cents),
           checkout_url: "#{checkout_url}&option=#{variant.external_id}"
         }
       end
@@ -91,7 +107,7 @@ class PagesController < Sellers::BaseController
         locals: {
           product:,
           checkout_url:,
-          formatted_price: MoneyFormatter.format(product.price_cents, currency, no_cents_if_whole: true, symbol: true),
+          formatted_price: product.price_formatted,
           cover_url: product.thumbnail_or_cover_url,
           description_paragraphs: description_paragraphs_for(product),
           variants:,

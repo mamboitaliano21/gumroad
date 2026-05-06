@@ -12,7 +12,7 @@ import { Placeholder } from "$app/components/ui/Placeholder";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "$app/components/ui/Table";
 
 type PageRow = {
-  id: number;
+  id: string;
   title: string;
   permalink: string;
   public_url: string;
@@ -25,9 +25,9 @@ type Props = {
 
 export default function PagesIndex() {
   const { pages } = usePage<Props>().props;
-  const [openPopoverId, setOpenPopoverId] = React.useState<number | null>(null);
+  const [openPopoverId, setOpenPopoverId] = React.useState<string | null>(null);
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     setOpenPopoverId(null);
     router.delete(Routes.page_path(id));
   };

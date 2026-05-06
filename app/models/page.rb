@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Page < ApplicationRecord
-  include Deletable
+  include Deletable, ExternalId
 
   TITLE_MAX_LENGTH = 255
   MAX_RAW_HTML_BYTES = 512.kilobytes
