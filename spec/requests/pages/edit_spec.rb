@@ -49,6 +49,19 @@ describe "Pages happy path", js: true, type: :system do
     end
   end
 
+  it "shows Create page on the product edit screen when the seller has the flag" do
+    product = create(:product, user: seller)
+    visit edit_link_path(product.unique_permalink)
+    expect(page).to have_link("Create page")
+  end
+
+  it "hides Create page from the product edit screen when the seller does not have the flag" do
+    Feature.deactivate_user(:pages, seller)
+    product = create(:product, user: seller)
+    visit edit_link_path(product.unique_permalink)
+    expect(page).not_to have_link("Create page")
+  end
+
   it "renders a published page inside an iframe sandbox at /p/:permalink" do
     page_record = create(:page, seller: seller, title: "Live page", raw_html: "<a href=\"/checkout?product=abc\" target=\"_top\">Buy now</a>")
 
