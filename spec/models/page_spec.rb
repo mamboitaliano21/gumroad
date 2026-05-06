@@ -67,6 +67,15 @@ describe Page do
       expect_any_instance_of(Pages::CompileTailwindService).to receive(:perform).and_return("/* stub */")
       page.update!(raw_html: "<div>changed</div>")
     end
+
+    it "adds an error and aborts save when CompileTailwindService raises" do
+      allow_any_instance_of(Pages::CompileTailwindService)
+        .to receive(:perform)
+        .and_raise(Pages::CompileTailwindService::CompileError, "boom")
+      page = build(:page, raw_html: "<div>x</div>")
+      expect(page.save).to be false
+      expect(page.errors[:raw_html].first).to match(/could not be compiled/)
+    end
   end
 
   describe "soft delete" do

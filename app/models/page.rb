@@ -34,6 +34,10 @@ class Page < ApplicationRecord
       sanitize_result = Pages::SanitizeHtmlService.new(raw_html.to_s).perform
       self.sanitized_html = sanitize_result[:html]
       self.compiled_css = Pages::CompileTailwindService.new(self.sanitized_html).perform
+    rescue Pages::CompileTailwindService::CompileError => e
+      Rails.logger.warn("Page#sanitize_and_compile failure (page_id=#{id || 'new'}): #{e.class} => #{e.message}")
+      errors.add(:raw_html, "could not be compiled, please check your HTML and try again")
+      throw :abort
     end
 
     def raw_html_within_size_limit

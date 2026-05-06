@@ -88,6 +88,15 @@ describe "Pages dashboard", type: :request do
       expect(session[:inertia_errors]).to be_present
       expect(session[:inertia_errors]["page.raw_html"]).to be_present
     end
+
+    it "surfaces inertia validation errors when Tailwind compile fails" do
+      allow_any_instance_of(Pages::CompileTailwindService)
+        .to receive(:perform)
+        .and_raise(Pages::CompileTailwindService::CompileError, "boom")
+      post "/pages", params: { page: { title: "T", raw_html: "<div>x</div>" } }
+      expect(response).to redirect_to(new_page_path)
+      expect(session[:inertia_errors]["page.raw_html"]).to be_present
+    end
   end
 
   describe "PATCH /pages/:id" do
