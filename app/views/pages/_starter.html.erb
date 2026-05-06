@@ -15,11 +15,6 @@
             </div>
           <% end %>
           <h1 class="text-5xl md:text-7xl font-black leading-tight"><%= product.name %></h1>
-          <% if description_paragraphs.first.present? %>
-            <p class="text-xl border-l-4 border-black pl-4 leading-relaxed">
-              <%= description_paragraphs.first %>
-            </p>
-          <% end %>
         </div>
         <% if cover_url.present? %>
           <div class="relative">
@@ -33,16 +28,14 @@
     </div>
   </section>
 
-  <% if description_paragraphs.any? %>
+  <% if description_html.present? %>
     <section id="about" class="py-16 px-4 bg-[#00FFCA] border-y-4 border-black">
       <div class="container mx-auto max-w-3xl">
         <h2 class="text-4xl md:text-5xl font-black mb-12 text-center">
           <span class="bg-white px-4 py-2 border-4 border-black inline-block -rotate-1">ABOUT</span>
         </h2>
         <div class="space-y-6 text-lg leading-relaxed">
-          <% description_paragraphs.each do |paragraph| %>
-            <p><%= paragraph %></p>
-          <% end %>
+          <%= description_html.html_safe %>
         </div>
       </div>
     </section>

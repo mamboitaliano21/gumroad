@@ -109,17 +109,10 @@ class PagesController < ApplicationController
           checkout_url:,
           formatted_price: product.price_formatted,
           cover_url: product.thumbnail_or_cover_url,
-          description_paragraphs: description_paragraphs_for(product),
+          description_html: product.description.to_s,
           variants:,
           byline: product.user.name_or_username.presence
         }
       )
-    end
-
-    def description_paragraphs_for(product)
-      return [] if product.description.blank?
-      fragment = Nokogiri::HTML.fragment(product.description)
-      paragraphs = fragment.search("p, div, li").map { |n| n.text.strip }.reject(&:blank?)
-      paragraphs.presence || [fragment.text.strip].reject(&:blank?)
     end
 end

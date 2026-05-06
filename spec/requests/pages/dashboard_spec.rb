@@ -56,6 +56,16 @@ describe "Pages dashboard", type: :request do
       expect(props["starter_title"]).to eq("Demo")
     end
 
+    it "includes each TipTap-nested paragraph bullet exactly once in starter_html" do
+      description = "<ul><li><p>Alpha bullet.</p></li><li><p>Beta bullet.</p></li><li><p>Gamma bullet.</p></li></ul>"
+      product = create(:product, user: seller, name: "T", description: description)
+      get "/pages/new", params: { product: product.unique_permalink }, headers: { "X-Inertia" => "true" }
+      expect(response).to have_http_status(:ok)
+      starter_html = JSON.parse(response.body)["props"]["starter_html"]
+      expect(starter_html.scan("Beta bullet.").size).to eq(1)
+      expect(starter_html.scan("Gamma bullet.").size).to eq(1)
+    end
+
     it "renders a per-variant pricing card when the product has alive variants" do
       product = create(:product, user: seller, name: "Tiered", price_cents: 1000)
       category = create(:variant_category, link: product, title: "Tier")
